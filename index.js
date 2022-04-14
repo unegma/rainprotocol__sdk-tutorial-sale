@@ -66,4 +66,4 @@ export async function gatedNFTExample() {
   }
 }
 
-gatedNFTExample()
+gatedNFTExample();
