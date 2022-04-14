@@ -47,6 +47,9 @@ export async function gatedNFTExample() {
       Math.floor(gatedNFTState.royaltyBPS * 100)
     );
 
+    // set YOU to the recipient
+    gatedNFTState.royaltyRecipient = address;
+
     console.log(
       "Submitting the following state (with the config fields bundled into config):",
       gatedNFTState,
