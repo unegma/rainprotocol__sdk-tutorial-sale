@@ -57,7 +57,6 @@ export async function gatedNFTExample() {
 
     const result = await rainSDK.GatedNFT.deploy(
       signer,
-      CHAIN_ID,
       gatedNFTState
     );
 
