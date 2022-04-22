@@ -2,64 +2,14 @@ import * as rainSDK from "rain-sdk";
 import { ethers, BigNumber, utils } from "ethers";
 
 
-/**
- * Enum for Opcodes
- * @readonly
- * @enum number
- */
-const Opcode = Object.freeze({
-  SKIP: 0,
-  VAL: 1,
-  DUP: 2,
-  ZIPMAP: 3,
-  BLOCK_NUMBER: 4,
-  BLOCK_TIMESTAMP: 5,
-  SENDER: 6,
-  IS_ZERO: 7,
-  EAGER_IF: 8,
-  EQUAL_TO: 9,
-  LESS_THAN: 10,
-  GREATER_THAN: 11,
-  EVERY: 12,
-  ANY: 13,
-  ADD: 14,
-  SUB: 15,
-  MUL: 16,
-  DIV: 17,
-  MOD: 18,
-  POW: 19,
-  MIN: 20,
-  MAX: 21,
-  REPORT: 22,
-  NEVER: 23,
-  ALWAYS: 24,
-  SATURATING_DIFF: 25,
-  UPDATE_BLOCKS_FOR_TIER_RANGE: 26,
-  SELECT_LTE: 27,
-  ERC20_BALANCE_OF: 28,
-  ERC20_TOTAL_SUPPLY: 29,
-  ERC721_BALANCE_OF: 30,
-  ERC721_OWNER_OF: 31,
-  ERC1155_BALANCE_OF: 32,
-  ERC1155_BALANCE_OF_BATCH: 33,
-  REMAINING_UNITS: 34,
-  TOTAL_RESERVE_IN: 35,
-  LAST_BUY_BLOCK: 36,
-  LAST_BUY_UNITS: 37,
-  LAST_BUY_PRICE: 38,
-  CURRENT_BUY_UNITS: 39,
-  TOKEN_ADDRESS: 40,
-  RESERVE_ADDRESS: 41
-})
-
 const afterTimestampConfig = (timestamp) => {
   return {
     sources: [
       ethers.utils.concat([
         // (BLOCK_NUMBER blockNumberSub1 gt)
-        op(Opcode.BLOCK_TIMESTAMP),
-        op(Opcode.VAL, 0),
-        op(Opcode.GREATER_THAN),
+        op(rainSDK.Sale.Opcode.BLOCK_TIMESTAMP),
+        op(rainSDK.Sale.Opcode.VAL, 0),
+        op(rainSDK.Sale.Opcode.GREATER_THAN),
       ]),
     ],
     constants: [timestamp],
@@ -106,9 +56,11 @@ export async function saleExample() {
     "erc20Config": {
       "name": "Raise token",
       "symbol": "rTKN",
+      "distributor": "0x0000000000000000000000000000000000000000",
       "initialSupply": 1000,
     },
     "tier": "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de",
+    "distributionEndForwardingAddress": "0x0000000000000000000000000000000000000000",
     "minimumTier": 0
   }
 
@@ -136,16 +88,16 @@ export async function saleExample() {
     const constants = [staticPrice, walletCap, ethers.constants.MaxUint256];
     const sources = [
       ethers.utils.concat([
-        op(Opcode.CURRENT_BUY_UNITS),
-        op(Opcode.TOKEN_ADDRESS),
-        op(Opcode.SENDER),
-        op(Opcode.ERC20_BALANCE_OF),
-        op(Opcode.ADD, 2),
-        op(Opcode.VAL, 1),
-        op(Opcode.GREATER_THAN),
-        op(Opcode.VAL, 2),
-        op(Opcode.VAL, 0),
-        op(Opcode.EAGER_IF),
+        op(rainSDK.Sale.Opcode.CURRENT_BUY_UNITS),
+        op(rainSDK.Sale.Opcode.TOKEN_ADDRESS),
+        op(rainSDK.Sale.Opcode.SENDER),
+        op(rainSDK.Sale.Opcode.IERC20_BALANCE_OF),
+        op(rainSDK.Sale.Opcode.ADD, 2),
+        op(rainSDK.Sale.Opcode.VAL, 1),
+        op(rainSDK.Sale.Opcode.GREATER_THAN),
+        op(rainSDK.Sale.Opcode.VAL, 2),
+        op(rainSDK.Sale.Opcode.VAL, 0),
+        op(rainSDK.Sale.Opcode.EAGER_IF),
       ]),
     ];
 
