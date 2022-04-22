@@ -52,17 +52,6 @@ const Opcode = Object.freeze({
   RESERVE_ADDRESS: 41
 })
 
-const getNewChildFromReceipt = (receipt, parentContract) => {
-  return ethers.utils.defaultAbiCoder.decode(
-    ["address", "address"],
-    receipt.events.filter(
-      (event) =>
-        event.event == "NewChild" &&
-        event.address.toUpperCase() == parentContract.address.toUpperCase()
-    )[0].data
-  )[1];
-};
-
 const afterTimestampConfig = (timestamp) => {
   return {
     sources: [
@@ -105,26 +94,22 @@ function bytify(
 export async function saleExample() {
 
   const CHAIN_ID = 80001;
-  const gatedNFTState = {
-    "sale": {
-      "recipient": "",
-      "reserve": "0x25a4dd4cd97ed462eb5228de47822e636ec3e31a",
-      "startBlock": 24407548,
-      "cooldownDuration": 100,
-      "saleTimeout": 100,
-      "minimumRaise": 1000,
-      "price": 10
-    },
-    "redeemable": {
+  const saleState = {
+    "recipient": "",
+    "reserve": "0x25a4dd4cd97ed462eb5228de47822e636ec3e31a",
+    "cooldownDuration": 100,
+    "saleTimeout": 100,
+    "minimumRaise": 1000,
+    "dustSize": 0
+  };
+  const redeemableState = {
+    "erc20Config": {
       "name": "Raise token",
       "symbol": "rTKN",
       "initialSupply": 1000,
-      "distributionEndForwardingAddress": "0x0000000000000000000000000000000000000000",
-      "walletCap": 10,
-      "tier": "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de",
-      "minimumTier": 0,
-      "raiseRange": null
-    }
+    },
+    "tier": "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de",
+    "minimumTier": 0
   }
 
   try {
@@ -149,7 +134,6 @@ export async function saleExample() {
     const walletCap = 10; // too see above
 
     const constants = [staticPrice, walletCap, ethers.constants.MaxUint256];
-
     const sources = [
       ethers.utils.concat([
         op(Opcode.CURRENT_BUY_UNITS),
@@ -165,6 +149,13 @@ export async function saleExample() {
       ]),
     ];
 
+    saleState.calculatePriceStateConfig = {
+      sources,
+      constants,
+      stackLength: 10,
+      argumentsLength: 0,
+    };
+
     // TODO: This is sent to `afterTimestampConfig` function and cause the `constant` being a NaN
     // let raiseRange;
     // In the rain tool kit, this variable is set with a range of dates on front end where [0] is start date
@@ -177,79 +168,37 @@ export async function saleExample() {
       currentDate,
       new Date(currentDate.getTime() + 30 * 60000),
     ];
-    // let raiseRange;
 
-    let extendedSaleState = gatedNFTState.sale;
-    extendedSaleState.canStartStateConfig = afterTimestampConfig(
+    saleState.canStartStateConfig = afterTimestampConfig(
       Math.floor(raiseRange[0].getTime() / 1000)
-      // @ts-ignore
-      // Math.floor(raiseRange?.[0].$d.getTime() / 1000)
     );
-    extendedSaleState.canEndStateConfig = afterTimestampConfig(
+    saleState.canEndStateConfig = afterTimestampConfig(
       Math.floor(raiseRange[1].getTime() / 1000)
-      // @ts-ignore
-      // Math.floor(raiseRange?.[1].$d.getTime() / 1000)
     );
-
-    extendedSaleState.calculatePriceStateConfig = {
-      sources,
-      constants,
-      stackLength: 10,
-      argumentsLength: 0,
-    };
-    extendedSaleState.dustSize = 0;
 
     // big numbers
-    // extendedSaleState.cooldownDuration = ethers.utils.parseUnits(extendedSaleState.cooldownDuration.toString())
-    extendedSaleState.minimumRaise = ethers.utils.parseUnits(
-      extendedSaleState.minimumRaise.toString()
+    saleState.cooldownDuration = ethers.utils.parseUnits(
+      saleState.cooldownDuration.toString()
+    );
+    saleState.minimumRaise = ethers.utils.parseUnits(
+      saleState.minimumRaise.toString()
     );
 
-    extendedSaleState.recipient = address;
+    saleState.recipient = address;
 
-    let extendedRedeemableState = gatedNFTState.redeemable;
-    // todo find a way to do away with this
-    extendedRedeemableState.erc20Config = {
-      name: extendedRedeemableState.name,
-      symbol: extendedRedeemableState.symbol,
-      distributor: ethers.constants.AddressZero,
-      initialSupply: ethers.utils.parseUnits(
-        extendedRedeemableState.initialSupply.toString()
-      ),
-    };
-
-    // todo might need to remove: price, saleTimeout, startBlock
-    // todo might need to remove initial supply (2nd one), minimum status, name, symbol, raiseRange, walletCap
-    delete extendedSaleState.price;
-    delete extendedSaleState.saleTimeout;
-    delete extendedSaleState.startBlock;
-    delete extendedRedeemableState.initialSupply;
-    // delete extendedRedeemableState.minimumStatus;
-    delete extendedRedeemableState.name;
-    delete extendedRedeemableState.symbol;
-    delete extendedRedeemableState.raiseRange;
-    delete extendedRedeemableState.walletCap;
 
     console.log(
       "Submitting the following state:",
-      extendedSaleState,
-      extendedRedeemableState
+      saleState,
+      redeemableState
     );
 
     const result = await rainSDK.Sale.deploy(
       signer,
-      {
-        saleConfig: extendedSaleState,
-        saleRedeemableERC20Config: extendedRedeemableState
-      }
+      saleState,
+      redeemableState
     );
 
-
-    // if (!ethers.utils.isAddress(sale.address)) {
-    //   throw new Error(
-    //     `invalid sale address: ${sale.address} (${sale.address.length} chars)`
-    //   );
-    // }
     console.log(result); // the sale contract
   } catch (err) {
     console.log(err);
