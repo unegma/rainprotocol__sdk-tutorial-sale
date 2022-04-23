@@ -45,23 +45,26 @@ export async function saleExample() {
 
   const CHAIN_ID = 80001;
   const saleState = {
-    "recipient": "",
-    "reserve": "0x25a4dd4cd97ed462eb5228de47822e636ec3e31a",
-    "cooldownDuration": 100,
-    "saleTimeout": 100,
-    "minimumRaise": 1000,
-    "dustSize": 0
+    canStartStateConfig: undefined,
+    canEndStateConfig: undefined,
+    calculatePriceStateConfig: undefined,
+    recipient: "",
+    reserve: "0x25a4dd4cd97ed462eb5228de47822e636ec3e31a",
+    saleTimeout: 100,
+    cooldownDuration: 100,
+    minimumRaise: 1000,
+    dustSize: 0
   };
   const redeemableState = {
-    "erc20Config": {
-      "name": "Raise token",
-      "symbol": "rTKN",
-      "distributor": "0x0000000000000000000000000000000000000000",
-      "initialSupply": 1000,
+    erc20Config: {
+      name: "Raise token",
+      symbol: "rTKN",
+      distributor: "0x0000000000000000000000000000000000000000",
+      initialSupply: 1000,
     },
-    "tier": "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de",
-    "distributionEndForwardingAddress": "0x0000000000000000000000000000000000000000",
-    "minimumTier": 0
+    tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de",
+    minimumTier: 0,
+    distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000"
   }
 
   try {
@@ -128,13 +131,13 @@ export async function saleExample() {
       Math.floor(raiseRange[1].getTime() / 1000)
     );
 
-    // big numbers
-    saleState.cooldownDuration = ethers.utils.parseUnits(
-      saleState.cooldownDuration.toString()
-    );
-    saleState.minimumRaise = ethers.utils.parseUnits(
-      saleState.minimumRaise.toString()
-    );
+    // big numbers // todo should be able to remove
+    // saleState.cooldownDuration = ethers.utils.parseUnits(
+    //   saleState.cooldownDuration.toString()
+    // );
+    // saleState.minimumRaise = ethers.utils.parseUnits(
+    //   saleState.minimumRaise.toString()
+    // );
 
     saleState.recipient = address;
 
