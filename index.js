@@ -141,6 +141,11 @@ export async function saleExample() {
 
     saleState.recipient = address;
 
+    // todo simplify this
+    redeemableState.erc20Config.initialSupply = ethers.utils.parseUnits(
+      redeemableState.erc20Config.initialSupply.toString()
+    );
+
 
     console.log(
       "Submitting the following state:",
