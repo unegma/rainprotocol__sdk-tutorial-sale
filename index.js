@@ -1,22 +1,5 @@
 import * as rainSDK from "rain-sdk";
-import { ethers, BigNumber, utils } from "ethers";
-
-
-const afterTimestampConfig = (timestamp) => {
-  return {
-    sources: [
-      ethers.utils.concat([
-        // (BLOCK_NUMBER blockNumberSub1 gt)
-        op(rainSDK.Sale.Opcode.BLOCK_TIMESTAMP),
-        op(rainSDK.Sale.Opcode.VAL, 0),
-        op(rainSDK.Sale.Opcode.GREATER_THAN),
-      ]),
-    ],
-    constants: [timestamp],
-    stackLength: 3,
-    argumentsLength: 0,
-  };
-};
+import { ethers} from "ethers";
 
 /**
  * Converts an opcode and operand to bytes, and returns their concatenation.
@@ -85,67 +68,56 @@ export async function saleExample() {
     const address = await signer.getAddress();
     console.log("Account:", address);
 
-    const staticPrice = 100; // todo this might not work and is not currently retreived dynamically here from a reserveErc20
-    const walletCap = 10; // too see above
-
-    const constants = [staticPrice, walletCap, ethers.constants.MaxUint256];
-    const sources = [
-      ethers.utils.concat([
-        op(rainSDK.Sale.Opcode.CURRENT_BUY_UNITS),
-        op(rainSDK.Sale.Opcode.TOKEN_ADDRESS),
-        op(rainSDK.Sale.Opcode.SENDER),
-        op(rainSDK.Sale.Opcode.IERC20_BALANCE_OF),
-        op(rainSDK.Sale.Opcode.ADD, 2),
-        op(rainSDK.Sale.Opcode.VAL, 1),
-        op(rainSDK.Sale.Opcode.GREATER_THAN),
-        op(rainSDK.Sale.Opcode.VAL, 2),
-        op(rainSDK.Sale.Opcode.VAL, 0),
-        op(rainSDK.Sale.Opcode.EAGER_IF),
-      ]),
-    ];
-
     saleState.calculatePriceStateConfig = {
-      sources,
-      constants,
+      sources: [
+        ethers.utils.concat([
+          op(rainSDK.Sale.Opcode.CURRENT_BUY_UNITS),
+          op(rainSDK.Sale.Opcode.TOKEN_ADDRESS),
+          op(rainSDK.Sale.Opcode.SENDER),
+          op(rainSDK.Sale.Opcode.IERC20_BALANCE_OF),
+          op(rainSDK.Sale.Opcode.ADD, 2),
+          op(rainSDK.Sale.Opcode.VAL, 1),
+          op(rainSDK.Sale.Opcode.GREATER_THAN),
+          op(rainSDK.Sale.Opcode.VAL, 2),
+          op(rainSDK.Sale.Opcode.VAL, 0),
+          op(rainSDK.Sale.Opcode.EAGER_IF),
+        ]),
+      ],
+      constants: [100, 10, ethers.constants.MaxUint256], // staticPrice, walletCap todo check if staticPrice/walletCap needs to be parsed (divide by 18 0s?)
       stackLength: 10,
       argumentsLength: 0,
     };
 
-    // TODO: This is sent to `afterTimestampConfig` function and cause the `constant` being a NaN
-    // let raiseRange;
-    // In the rain tool kit, this variable is set with a range of dates on front end where [0] is start date
-    // and [1] is end date.
-    // I added both Dates:
-    // The startDate is raiseRange[0] and will be the current Date
-    // The endDate is raiseRange[1] and will be the current Date + 30 minutes (30 * 60000 miliseconds)
-    const currentDate = new Date();
-    const raiseRange = [
-      currentDate,
-      new Date(currentDate.getTime() + 30 * 60000),
-    ];
+    // see the react example for a more complex example of passing opcodes to detect whether can start/end is after now or not.
+    // todo can I pass bytecode here instead?
+    saleState.canStartStateConfig = {
+      sources: [
+        ethers.utils.concat([
+          op(rainSDK.Sale.Opcode.VAL, 0),
+        ]),
+      ],
+      constants: [1],
+      stackLength: 1,
+      argumentsLength: 0,
+    };
 
-    saleState.canStartStateConfig = afterTimestampConfig(
-      Math.floor(raiseRange[0].getTime() / 1000)
-    );
-    saleState.canEndStateConfig = afterTimestampConfig(
-      Math.floor(raiseRange[1].getTime() / 1000)
-    );
-
-    // big numbers // todo should be able to remove
-    // saleState.cooldownDuration = ethers.utils.parseUnits(
-    //   saleState.cooldownDuration.toString()
-    // );
-    // saleState.minimumRaise = ethers.utils.parseUnits(
-    //   saleState.minimumRaise.toString()
-    // );
-
-    saleState.recipient = address;
+    saleState.canEndStateConfig = {
+      sources: [
+        ethers.utils.concat([
+          op(rainSDK.Sale.Opcode.VAL, 0),
+        ]),
+      ],
+      constants: [1],
+      stackLength: 1,
+      argumentsLength: 0,
+    };
 
     // todo simplify this
     redeemableState.erc20Config.initialSupply = ethers.utils.parseUnits(
       redeemableState.erc20Config.initialSupply.toString()
     );
 
+    saleState.recipient = address;
 
     console.log(
       "Submitting the following state:",
