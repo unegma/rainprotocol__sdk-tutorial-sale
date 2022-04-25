@@ -68,6 +68,7 @@ export async function saleExample() {
     const address = await signer.getAddress();
     console.log("Account:", address);
 
+    // v Configuration code below this line
 
     // current buy units: amount want to buy, put into stack
     // token address
@@ -142,6 +143,8 @@ export async function saleExample() {
 
     saleState.recipient = address;
 
+    // ^ Configuration code above this line
+
     console.log(
       "Submitting the following state:",
       saleState,
@@ -154,7 +157,7 @@ export async function saleExample() {
       redeemableState
     );
 
-    console.log(result); // the sale contract
+    console.log(result); // the Sale contract and corresponding address
   } catch (err) {
     console.log(err);
   }
