@@ -68,22 +68,44 @@ export async function saleExample() {
     const address = await signer.getAddress();
     console.log("Account:", address);
 
+
+    // current buy units: amount want to buy, put into stack
+    // token address
+    // returns current token balance
+
+    // define the parameters for the VM which will be used whenever the price is calculated, for example, when a user wants to buy a number of units
+    // the order is important
+    //
     saleState.calculatePriceStateConfig = {
       sources: [
         ethers.utils.concat([
-          op(rainSDK.Sale.Opcode.CURRENT_BUY_UNITS),
+          // put onto the stack, the amount the current user wants to buy
+          op(rainSDK.Sale.Opcode.CURRENT_BUY_UNITS), //
+
+          // put onto the stack, the current token balance of the user (the Sale's rTKN represented in the smart contract)
           op(rainSDK.Sale.Opcode.TOKEN_ADDRESS),
           op(rainSDK.Sale.Opcode.SENDER),
           op(rainSDK.Sale.Opcode.IERC20_BALANCE_OF),
+
+          // add the first two elements of the stack (current buy units and balance of that user)
           op(rainSDK.Sale.Opcode.ADD, 2),
-          op(rainSDK.Sale.Opcode.VAL, 1),
-          op(rainSDK.Sale.Opcode.GREATER_THAN),
-          op(rainSDK.Sale.Opcode.VAL, 2),
-          op(rainSDK.Sale.Opcode.VAL, 0),
+
+          // here we have a potential new value which we will compare to walletCap
+
+          // and then check if it exceeds the walletCap (ie the amount allowed)
+          op(rainSDK.Sale.Opcode.VAL, 1),// walletCap ()
+          op(rainSDK.Sale.Opcode.GREATER_THAN), // this will put a boolean on the stack (true: 1, false: 0)
+
+          // this will behave like a minimum wallet cap, so you cant buy below this amount
+          // op(rainSDK.Sale.Opcode.LESS_THAN), // this will put a boolean on the stack (true: 1, false: 0)
+
+          // eager if will get the 1st (result of greater than) and 3rd value
+          op(rainSDK.Sale.Opcode.VAL, 2), // `MaxUint256` this will be executed if the check above is true (this is an infinity price so it can't be bought)
+          op(rainSDK.Sale.Opcode.VAL, 0), // `staticPrice` this will be executed if the check above is false (staticPrice is the price that the user wants to exchange the tokens for)
           op(rainSDK.Sale.Opcode.EAGER_IF),
         ]),
       ],
-      constants: [100, 10, ethers.constants.MaxUint256], // staticPrice, walletCap todo check if staticPrice/walletCap needs to be parsed (divide by 18 0s?)
+      constants: [100, 10, ethers.constants.MaxUint256], // staticPrice, walletCap, MaxUint256 (ffff..) todo check if staticPrice/walletCap needs to be parsed (divide by 18 0s?)
       stackLength: 10,
       argumentsLength: 0,
     };
