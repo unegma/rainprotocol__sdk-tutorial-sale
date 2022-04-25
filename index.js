@@ -90,6 +90,7 @@ export async function saleExample() {
 
     // see the react example for a more complex example of passing opcodes to detect whether can start/end is after now or not.
     // todo can I pass bytecode here instead?
+    // todo find out the name of these chunks
     saleState.canStartStateConfig = {
       sources: [
         ethers.utils.concat([
