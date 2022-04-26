@@ -134,7 +134,7 @@ export async function saleExample() {
     console.log(result); // the Sale contract and corresponding address
 
     // extra functionality
-    console.log(result.address);
+    console.log(`Getting address: ${result.address}`);
     let saleContract = new rainSDK.Sale(result.address, signer);
     console.log(saleContract);
     let price = await saleContract.calculatePrice(100);
