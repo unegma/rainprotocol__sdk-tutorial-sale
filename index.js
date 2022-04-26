@@ -1,29 +1,6 @@
 import * as rainSDK from "rain-sdk";
 import { ethers} from "ethers";
 
-/**
- * Converts an opcode and operand to bytes, and returns their concatenation.
- * @param code - the opcode
- * @param erand - the operand, currently limited to 1 byte (defaults to 0)
- */
-function op(code, erand = 0) {
-  return ethers.utils.concat([bytify(code), bytify(erand)]);
-}
-
-/**
- * Converts a value to raw bytes representation. Assumes `value` is less than or equal to 1 byte, unless a desired `bytesLength` is specified.
- *
- * @param value - value to convert to raw bytes format
- * @param bytesLength - (defaults to 1) number of bytes to left pad if `value` doesn't completely fill the desired amount of memory. Will throw `InvalidArgument` error if value already exceeds bytes length.
- * @returns {Uint8Array} - raw bytes representation
- */
-function bytify(
-  value,
-  bytesLength = 1
-) {
-  return ethers.utils.zeroPad(ethers.utils.hexlify(value), bytesLength);
-}
-
 export async function saleExample() {
 
   const CHAIN_ID = 80001;
@@ -70,6 +47,31 @@ export async function saleExample() {
 
     // v Configuration code below this line
 
+    // see the react example for a more complex example of passing opcodes to detect whether can start/end is after now or not.
+    // todo can I pass bytecode here instead?
+    saleState.canStartStateConfig = {
+      sources: [
+        ethers.utils.concat([
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 0),
+        ]),
+      ],
+      constants: [1],
+      stackLength: 1,
+      argumentsLength: 0,
+    };
+
+    saleState.canEndStateConfig = {
+      sources: [
+        ethers.utils.concat([
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 0),
+        ]),
+      ],
+      constants: [1],
+      stackLength: 1,
+      argumentsLength: 0,
+    };
+
+
     // current buy units: amount want to buy, put into stack
     // token address
     // returns current token balance
@@ -81,29 +83,29 @@ export async function saleExample() {
       sources: [
         ethers.utils.concat([
           // put onto the stack, the amount the current user wants to buy
-          op(rainSDK.Sale.Opcode.CURRENT_BUY_UNITS), //
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.CURRENT_BUY_UNITS), //
 
           // put onto the stack, the current token balance of the user (the Sale's rTKN represented in the smart contract)
-          op(rainSDK.Sale.Opcode.TOKEN_ADDRESS),
-          op(rainSDK.Sale.Opcode.SENDER),
-          op(rainSDK.Sale.Opcode.IERC20_BALANCE_OF),
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.TOKEN_ADDRESS),
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.SENDER),
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.IERC20_BALANCE_OF),
 
           // add the first two elements of the stack (current buy units and balance of that user)
-          op(rainSDK.Sale.Opcode.ADD, 2),
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.ADD, 2),
 
           // here we have a potential new value which we will compare to walletCap
 
           // and then check if it exceeds the walletCap (ie the amount allowed)
-          op(rainSDK.Sale.Opcode.VAL, 1),// walletCap ()
-          op(rainSDK.Sale.Opcode.GREATER_THAN), // this will put a boolean on the stack (true: 1, false: 0)
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 1),// walletCap ()
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.GREATER_THAN), // this will put a boolean on the stack (true: 1, false: 0)
 
           // this will behave like a minimum wallet cap, so you cant buy below this amount
-          // op(rainSDK.Sale.Opcode.LESS_THAN), // this will put a boolean on the stack (true: 1, false: 0)
+          // rainSDK.VM.op(rainSDK.Sale.Opcodes.LESS_THAN), // this will put a boolean on the stack (true: 1, false: 0)
 
           // eager if will get the 1st (result of greater than) and 3rd value
-          op(rainSDK.Sale.Opcode.VAL, 2), // `MaxUint256` this will be executed if the check above is true (this is an infinity price so it can't be bought)
-          op(rainSDK.Sale.Opcode.VAL, 0), // `staticPrice` this will be executed if the check above is false (staticPrice is the price that the user wants to exchange the tokens for)
-          op(rainSDK.Sale.Opcode.EAGER_IF),
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 2), // `MaxUint256` this will be executed if the check above is true (this is an infinity price so it can't be bought)
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 0), // `staticPrice` this will be executed if the check above is false (staticPrice is the price that the user wants to exchange the tokens for)
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.EAGER_IF),
         ]),
       ],
       constants: [100, 10, ethers.constants.MaxUint256], // staticPrice, walletCap, MaxUint256 (ffff..) todo check if staticPrice/walletCap needs to be parsed (divide by 18 0s?)
@@ -111,30 +113,6 @@ export async function saleExample() {
       argumentsLength: 0,
     };
 
-    // see the react example for a more complex example of passing opcodes to detect whether can start/end is after now or not.
-    // todo can I pass bytecode here instead?
-    // todo find out the name of these chunks
-    saleState.canStartStateConfig = {
-      sources: [
-        ethers.utils.concat([
-          op(rainSDK.Sale.Opcode.VAL, 0),
-        ]),
-      ],
-      constants: [1],
-      stackLength: 1,
-      argumentsLength: 0,
-    };
-
-    saleState.canEndStateConfig = {
-      sources: [
-        ethers.utils.concat([
-          op(rainSDK.Sale.Opcode.VAL, 0),
-        ]),
-      ],
-      constants: [1],
-      stackLength: 1,
-      argumentsLength: 0,
-    };
 
     // todo simplify this
     redeemableState.erc20Config.initialSupply = ethers.utils.parseUnits(
