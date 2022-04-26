@@ -45,7 +45,7 @@ export async function saleExample() {
     const address = await signer.getAddress();
     console.log("Account:", address);
 
-    // v Configuration code below this line
+    // v-- Configuration code below this line --v
 
     saleState.canStartStateConfig = {
       constants: [1],
@@ -117,7 +117,7 @@ export async function saleExample() {
 
     saleState.recipient = address;
 
-    // ^ Configuration code above this line
+    // ^-- Configuration code above this line --^
 
     console.log(
       "Submitting the following state:",
