@@ -47,30 +47,27 @@ export async function saleExample() {
 
     // v Configuration code below this line
 
-    // see the react example for a more complex example of passing opcodes to detect whether can start/end is after now or not.
-    // todo can I pass bytecode here instead?
     saleState.canStartStateConfig = {
+      constants: [1],
       sources: [
         ethers.utils.concat([
           rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 0),
         ]),
       ],
-      constants: [1],
       stackLength: 1,
       argumentsLength: 0,
     };
 
     saleState.canEndStateConfig = {
+      constants: [1],
       sources: [
         ethers.utils.concat([
           rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 0),
         ]),
       ],
-      constants: [1],
       stackLength: 1,
       argumentsLength: 0,
     };
-
 
     // current buy units: amount want to buy, put into stack
     // token address
@@ -80,6 +77,7 @@ export async function saleExample() {
     // the order is important
     //
     saleState.calculatePriceStateConfig = {
+      constants: [100, 10, ethers.constants.MaxUint256], // staticPrice, walletCap, MaxUint256 (ffff..) todo check if staticPrice/walletCap needs to be parsed (divide by 18 0s?)
       sources: [
         ethers.utils.concat([
           // put onto the stack, the amount the current user wants to buy
@@ -108,13 +106,11 @@ export async function saleExample() {
           rainSDK.VM.op(rainSDK.Sale.Opcodes.EAGER_IF),
         ]),
       ],
-      constants: [100, 10, ethers.constants.MaxUint256], // staticPrice, walletCap, MaxUint256 (ffff..) todo check if staticPrice/walletCap needs to be parsed (divide by 18 0s?)
       stackLength: 10,
       argumentsLength: 0,
     };
 
-
-    // todo simplify this
+    // convert the initial supply into the correct format
     redeemableState.erc20Config.initialSupply = ethers.utils.parseUnits(
       redeemableState.erc20Config.initialSupply.toString()
     );
