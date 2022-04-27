@@ -126,7 +126,7 @@ export async function saleExample() {
     console.log('Sale Contract:', saleContract); // the Sale contract and corresponding address
 
     // extra functionality
-    let price = await saleContract.calculatePrice(ethers.utils.parseUnits("100", erc20decimals)); // todo should it be? ethers.utils.parseUnits("100", erc20decimals)
+    let price = await saleContract.calculatePrice(ethers.utils.parseUnits("100", erc20decimals));
     console.log(`Price: ${price}`);
 
   } catch (err) {
