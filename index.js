@@ -12,10 +12,10 @@ export async function saleExample() {
     canEndStateConfig: undefined,
     calculatePriceStateConfig: undefined,
     recipient: "",
-    reserve: "0x25a4dd4cd97ed462eb5228de47822e636ec3e31a",
+    reserve: "0x25a4dd4cd97ed462eb5228de47822e636ec3e31a", // the reserve token contract address
     saleTimeout: 100, // this will be 100 blocks
     cooldownDuration: 100, // this will be 100 blocks
-    minimumRaise: ethers.utils.parseUnits("1000", erc20decimals),
+    minimumRaise: ethers.utils.parseUnits("1000", erc20decimals), // minimum to complete a Raise
     dustSize: ethers.utils.parseUnits("0", erc20decimals),
   };
   const redeemableState = {
@@ -25,7 +25,7 @@ export async function saleExample() {
       distributor: "0x0000000000000000000000000000000000000000",
       initialSupply: ethers.utils.parseUnits("1000", erc20decimals),
     },
-    tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de",
+    tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address
     minimumTier: 0,
     distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000"
   }
