@@ -22,8 +22,8 @@ export async function saleExample() {
     erc20Config: { // config for the redeemable token (rTKN) which participants will get in exchange for reserve tokens
       name: "Raise token", // the name of the rTKN
       symbol: "rTKN", // the symbol for your rTKN
-      distributor: "0x0000000000000000000000000000000000000000", //
-      initialSupply: ethers.utils.parseUnits("1000", erc20decimals), //
+      distributor: "0x0000000000000000000000000000000000000000", // distributor address
+      initialSupply: ethers.utils.parseUnits("1000", erc20decimals), // initial rTKN supply
     },
     tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating)
     minimumTier: 0, // minimum tier a user needs to take part
