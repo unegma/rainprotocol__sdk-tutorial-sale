@@ -1,12 +1,12 @@
 import * as rainSDK from "rain-sdk";
 import { ethers} from "ethers";
+const ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
 
 // tutorial: https://docs.rainprotocol.xyz/guides/SDK/using-the-rain-sdk-to-deploy-a-sale-example-with-opcodes/
 export async function saleExample() {
   const CHAIN_ID = 80001; // Mumbai testnet chain id
-  const erc20decimals = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
-  const staticPrice = ethers.utils.parseUnits("100", erc20decimals);
-  const walletCap = ethers.utils.parseUnits("10", erc20decimals);
+  const staticPrice = ethers.utils.parseUnits("1", ERC20_DECIMALS);
+  const walletCap = ethers.utils.parseUnits("100", ERC20_DECIMALS);
   const saleState = {
     canStartStateConfig: undefined, // config for the start of the Sale (see opcodes section below)
     canEndStateConfig: undefined, // config for the end of the Sale (see opcodes section below)
@@ -15,15 +15,15 @@ export async function saleExample() {
     reserve: "0x25a4dd4cd97ed462eb5228de47822e636ec3e31a", // the reserve token contract address
     saleTimeout: 100, // this will be 100 blocks
     cooldownDuration: 100, // this will be 100 blocks
-    minimumRaise: ethers.utils.parseUnits("1000", erc20decimals), // minimum to complete a Raise
-    dustSize: ethers.utils.parseUnits("0", erc20decimals),
+    minimumRaise: ethers.utils.parseUnits("1000", ERC20_DECIMALS), // minimum to complete a Raise
+    dustSize: ethers.utils.parseUnits("0", ERC20_DECIMALS),
   };
   const redeemableState = {
     erc20Config: { // config for the redeemable token (rTKN) which participants will get in exchange for reserve tokens
       name: "Raise token", // the name of the rTKN
       symbol: "rTKN", // the symbol for your rTKN
       distributor: "0x0000000000000000000000000000000000000000", // distributor address
-      initialSupply: ethers.utils.parseUnits("1000", erc20decimals), // initial rTKN supply
+      initialSupply: ethers.utils.parseUnits("1000000", ERC20_DECIMALS), // initial rTKN supply
     },
     tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating)
     minimumTier: 0, // minimum tier a user needs to take part
@@ -123,11 +123,29 @@ export async function saleExample() {
       redeemableState
     );
 
-    console.log('Sale Contract:', saleContract); // the Sale contract and corresponding address
+    console.log('Result: Sale Contract:', saleContract); // the Sale contract and corresponding address
 
-    // extra functionality
-    let price = await saleContract.calculatePrice(ethers.utils.parseUnits("100", erc20decimals));
-    console.log(`Price: ${price}`);
+
+    // ### Interact with the newly deployed ecosystem
+
+    let price = await saleContract.calculatePrice(ethers.utils.parseUnits("10", ERC20_DECIMALS)); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number)
+    console.log(`Info: Price of tokens in the Sale: ${price}`); // todo check the price is correct
+
+    // configure buy for the sale (We have set this to Matic which is also used for paying gas fees, but this could easily be set to usdcc or some other token)
+    const buyConfig = {
+      feeRecipient: address,
+      fee: 0, // TODO IS THIS NEEDED TO BE toNumber(). no // todo why does this work as 0.1 if eth doesn't have decimals
+      minimumUnits: 1,
+      desiredUnits: 1,
+      maximumPrice: 1000000000000000000, // 0.01 matic? // TODO VERY ARBITRARY ETHERS CONSTANT MAX AMOUNT // todo why do we set this? // TODO IS THIS NEEDED TO BE toNumber()
+    }
+
+    console.log(`Info: Buying from Sale with parameters:`, buyConfig);
+    const buyStatus = await saleContract.buy(buyConfig);
+    console.log(`Info: Buy Status:`, buyStatus);
+
+    console.log('------------------------------'); // separator
+    console.log("Info: Done");
 
   } catch (err) {
     console.log(err);
