@@ -5,25 +5,27 @@ const ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.
 // tutorial: https://docs.rainprotocol.xyz/guides/SDK/using-the-rain-sdk-to-deploy-a-sale-example-with-opcodes/
 export async function saleExample() {
   const CHAIN_ID = 80001; // Mumbai testnet chain id
-  const staticPrice = ethers.utils.parseUnits("1", ERC20_DECIMALS);
-  const walletCap = ethers.utils.parseUnits("100", ERC20_DECIMALS);
-  const saleState = {
+  const staticPrice = ethers.utils.parseUnits("0.001", ERC20_DECIMALS); // price 1000000000000000000 / 10^18 (reserve token erc deconimals)
+  const walletCap = ethers.constants.MaxUint256; // no max otherwise: ethers.utils.parseUnits("100", ERC20_DECIMALS)
+
+  // todo rename to saleConfig in other tutorials, rename to RECEIPT in other tutorials
+  const saleConfig = {
     canStartStateConfig: undefined, // config for the start of the Sale (see opcodes section below)
     canEndStateConfig: undefined, // config for the end of the Sale (see opcodes section below)
     calculatePriceStateConfig: undefined, // config for the `calculatePrice` function (see opcodes section below)
-    recipient: "", // who will receive the RESERVE token (e.g. USDCC) after the Sale completes
-    reserve: "0x25a4dd4cd97ed462eb5228de47822e636ec3e31a", // the reserve token contract address
-    saleTimeout: 100, // this will be 100 blocks
-    cooldownDuration: 100, // this will be 100 blocks
+    recipient: undefined, // who will receive the RESERVE token (e.g. USDCC) after the Sale completes
+    reserve: "0x0000000000000000000000000000000000001010", // the reserve token contract address (MUMBAI MATIC in this case)
+    saleTimeout: 10000, // for MUMBAI 100 blocks (10 mins) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
+    cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // todo this will stay as blocks in upcoming releases
     minimumRaise: ethers.utils.parseUnits("1000", ERC20_DECIMALS), // minimum to complete a Raise
-    dustSize: ethers.utils.parseUnits("0", ERC20_DECIMALS),
+    dustSize: ethers.utils.parseUnits("0", ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
   };
-  const redeemableState = {
+  const redeemableConfig = {
     erc20Config: { // config for the redeemable token (rTKN) which participants will get in exchange for reserve tokens
       name: "Raise token", // the name of the rTKN
       symbol: "rTKN", // the symbol for your rTKN
       distributor: "0x0000000000000000000000000000000000000000", // distributor address
-      initialSupply: ethers.utils.parseUnits("1000000", ERC20_DECIMALS), // initial rTKN supply
+      initialSupply: ethers.utils.parseUnits("10000", ERC20_DECIMALS), // initial rTKN supply
     },
     tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating)
     minimumTier: 0, // minimum tier a user needs to take part
@@ -46,11 +48,13 @@ export async function saleExample() {
     await provider.send("eth_requestAccounts", []);
     const signer = provider.getSigner();
     const address = await signer.getAddress();
-    console.log("Account:", address);
+    console.log("Info: Account address", address);
+    console.log('------------------------------'); // separator
 
     // v-- Configuration code below this line --v
+    saleConfig.recipient = address;
 
-    saleState.canStartStateConfig = {
+    saleConfig.canStartStateConfig = {
       constants: [1],
       sources: [
         ethers.utils.concat([
@@ -61,7 +65,25 @@ export async function saleExample() {
       argumentsLength: 0,
     };
 
-    saleState.canEndStateConfig = {
+    // const blockNumber = 1;
+
+    // saleScriptGenerator can be used for gating who can start the sale
+    // rainSDK.SaleDurationInTimestamp (todo check the saleScriptGenerator in rain-sdk)
+
+    // saleConfig.canStartStateConfig = {
+    //   constants: [blockNumber],
+    //   sources: [
+    //     ethers.utils.concat([
+    //       rainSDK.VM.op((rainSDK.Sale.Opcodes.BLOCK_NUMBER)), // this is changing to timestamp version
+    //       rainSDK.VM.op((rainSDK.Sale.Opcodes.VAL, 0)),
+    //       rainSDK.VM.op((rainSDK.Sale.Opcodes.GREATER_THAN)),
+    //     ]),
+    //   ],
+    //   stackLength: 3,
+    //   argumentsLength: 0,
+    // };
+
+    saleConfig.canEndStateConfig = {
       constants: [1],
       sources: [
         ethers.utils.concat([
@@ -73,7 +95,7 @@ export async function saleExample() {
     };
 
     // define the parameters for the VM which will be used whenever the price is calculated, for example, when a user wants to buy a number of units
-    saleState.calculatePriceStateConfig = {
+    saleConfig.calculatePriceStateConfig = {
       constants: [staticPrice, walletCap, ethers.constants.MaxUint256], // staticPrice, walletCap, (0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
       sources: [
         ethers.utils.concat([
@@ -107,42 +129,54 @@ export async function saleExample() {
       argumentsLength: 0,
     };
 
-    saleState.recipient = address;
-
     // ^-- Configuration code above this line --^
 
     console.log(
       "Submitting the following state:",
-      saleState,
-      redeemableState
+      saleConfig,
+      redeemableConfig
     );
 
     const saleContract = await rainSDK.Sale.deploy(
       signer,
-      saleState,
-      redeemableState
+      saleConfig,
+      redeemableConfig
     );
 
     console.log('Result: Sale Contract:', saleContract); // the Sale contract and corresponding address
-
+    console.log('------------------------------'); // separator
 
     // ### Interact with the newly deployed ecosystem
 
-    let price = await saleContract.calculatePrice(ethers.utils.parseUnits("10", ERC20_DECIMALS)); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number)
-    console.log(`Info: Price of tokens in the Sale: ${price}`); // todo check the price is correct
+    console.log('Info: Starting Sale.');
+    const startStatusTransaction = await saleContract.start();
+    const startStatusReceipt = await startStatusTransaction.wait();
+    console.log('Info: Sale Started Status:', startStatusReceipt);
+    console.log('------------------------------'); // separator
+
+    const DESIRED_UNITS = ethers.utils.parseUnits("1", ERC20_DECIMALS); // 1 of rTKN
+
+    let price = await saleContract.calculatePrice(DESIRED_UNITS); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number)
+    console.log(`Info: Price of tokens in the Sale: ${price/10^ERC20_DECIMALS}`); // todo check the price is correct
 
     // configure buy for the sale (We have set this to Matic which is also used for paying gas fees, but this could easily be set to usdcc or some other token)
     const buyConfig = {
       feeRecipient: address,
-      fee: 0, // TODO IS THIS NEEDED TO BE toNumber(). no // todo why does this work as 0.1 if eth doesn't have decimals
-      minimumUnits: 1,
-      desiredUnits: 1,
-      maximumPrice: 1000000000000000000, // 0.01 matic? // TODO VERY ARBITRARY ETHERS CONSTANT MAX AMOUNT // todo why do we set this? // TODO IS THIS NEEDED TO BE toNumber()
+      fee: ethers.utils.parseUnits("0", ERC20_DECIMALS), // TODO IS THIS NEEDED TO BE toNumber(). no // todo why does this work as 0.1 if eth doesn't have decimals
+
+      // checks desiredUnits first, then minimumUnits (e.g. if there aren't any left over in the sale)
+      minimumUnits: DESIRED_UNITS,
+      desiredUnits: DESIRED_UNITS,
+
+      // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice)
+      maximumPrice: ethers.constants.MaxUint256, // 0.001 matic? // TODO VERY ARBITRARY ETHERS CONSTANT MAX AMOUNT // todo why do we set this? // TODO IS THIS NEEDED TO BE toNumber()
+      // maximumPrice: staticPrice, // 0.001 matic? // TODO VERY ARBITRARY ETHERS CONSTANT MAX AMOUNT // todo why do we set this? // TODO IS THIS NEEDED TO BE toNumber()
     }
 
     console.log(`Info: Buying from Sale with parameters:`, buyConfig);
-    const buyStatus = await saleContract.buy(buyConfig);
-    console.log(`Info: Buy Status:`, buyStatus);
+    const buyStatusTransaction = await saleContract.buy(buyConfig);
+    const buyStatusReceipt = await buyStatusTransaction.wait();
+    console.log(`Info: Buy Status:`, buyStatusReceipt);
 
     console.log('------------------------------'); // separator
     console.log("Info: Done");
