@@ -14,6 +14,7 @@ export async function saleExample() {
     canEndStateConfig: undefined, // config for the end of the Sale (see opcodes section below)
     calculatePriceStateConfig: undefined, // config for the `calculatePrice` function (see opcodes section below)
     recipient: undefined, // who will receive the RESERVE token (e.g. USDCC) after the Sale completes
+    // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals)
     reserve: "0x0000000000000000000000000000000000001010", // the reserve token contract address (MUMBAI MATIC in this case)
     saleTimeout: 10000, // for MUMBAI 100 blocks (10 mins)  1000 minutes (16 hours-ish) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
     cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // todo this will stay as blocks in upcoming releases
