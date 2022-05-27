@@ -15,9 +15,9 @@ export async function saleExample() {
     calculatePriceStateConfig: undefined, // config for the `calculatePrice` function (see opcodes section below)
     recipient: undefined, // who will receive the RESERVE token (e.g. USDCC) after the Sale completes
     reserve: "0x0000000000000000000000000000000000001010", // the reserve token contract address (MUMBAI MATIC in this case)
-    saleTimeout: 10000, // for MUMBAI 100 blocks (10 mins) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
+    saleTimeout: 10000, // for MUMBAI 100 blocks (10 mins)  1000 minutes (16 hours-ish) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
     cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // todo this will stay as blocks in upcoming releases
-    minimumRaise: ethers.utils.parseUnits("1000", ERC20_DECIMALS), // minimum to complete a Raise
+    minimumRaise: ethers.utils.parseUnits("1000", ERC20_DECIMALS), // this will be the rTKN - todo check
     dustSize: ethers.utils.parseUnits("0", ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
   };
   const redeemableConfig = {
@@ -27,7 +27,7 @@ export async function saleExample() {
       distributor: "0x0000000000000000000000000000000000000000", // distributor address
       initialSupply: ethers.utils.parseUnits("10000", ERC20_DECIMALS), // initial rTKN supply
     },
-    tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating)
+    tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // todo what is this one? tier contract address (used for gating)
     minimumTier: 0, // minimum tier a user needs to take part
     distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000" // the rTKNs that are not sold get forwarded here (0x00.. will burn them)
   }
@@ -66,10 +66,10 @@ export async function saleExample() {
     };
 
     // const blockNumber = 1;
-
-    // saleScriptGenerator can be used for gating who can start the sale
-    // rainSDK.SaleDurationInTimestamp (todo check the saleScriptGenerator in rain-sdk)
-
+    //
+    // // saleScriptGenerator can be used for gating who can start the sale
+    // // rainSDK.SaleDurationInTimestamp (todo check the saleScriptGenerator in rain-sdk)
+    //
     // saleConfig.canStartStateConfig = {
     //   constants: [blockNumber],
     //   sources: [
@@ -100,7 +100,7 @@ export async function saleExample() {
       sources: [
         ethers.utils.concat([
           // put onto the stack, the amount the current user wants to buy
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.CURRENT_BUY_UNITS),
+          rainSDK.VM.op(rainSDK.Sale.Opcodes.CURRENT_BUY_UNITS), // runtime value from the context
 
           // put onto the stack, the current token balance of the user (the Sale's rTKN represented in the smart contract)
           rainSDK.VM.op(rainSDK.Sale.Opcodes.TOKEN_ADDRESS),
@@ -185,5 +185,7 @@ export async function saleExample() {
     console.log(err);
   }
 }
+
+//saleSate.canStartStateConfig = new SaleDurationInTimestamp(startTimestamp).applyOwnership(deployer-addres)
 
 saleExample();
