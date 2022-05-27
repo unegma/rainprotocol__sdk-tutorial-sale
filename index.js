@@ -14,11 +14,10 @@ export async function saleExample() {
     canEndStateConfig: undefined, // config for the end of the Sale (see opcodes section below)
     calculatePriceStateConfig: undefined, // config for the `calculatePrice` function (see opcodes section below)
     recipient: undefined, // who will receive the RESERVE token (e.g. USDCC) after the Sale completes
-    // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals)
-    reserve: "0x0000000000000000000000000000000000001010", // the reserve token contract address (MUMBAI MATIC in this case)
-    saleTimeout: 10000, // for MUMBAI 100 blocks (10 mins)  1000 minutes (16 hours-ish) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
+    reserve: "0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A", // the reserve token contract address (MUMBAI MATIC in this case)
+    saleTimeout: 10000, // for MUMBAI 100 blocks (10 mins) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
     cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // todo this will stay as blocks in upcoming releases
-    minimumRaise: ethers.utils.parseUnits("1000", ERC20_DECIMALS), // this will be the rTKN - todo check
+    minimumRaise: ethers.utils.parseUnits("1000", ERC20_DECIMALS), // minimum to complete a Raise
     dustSize: ethers.utils.parseUnits("0", ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
   };
   const redeemableConfig = {
@@ -28,7 +27,7 @@ export async function saleExample() {
       distributor: "0x0000000000000000000000000000000000000000", // distributor address
       initialSupply: ethers.utils.parseUnits("10000", ERC20_DECIMALS), // initial rTKN supply
     },
-    tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // todo what is this one? tier contract address (used for gating)
+    tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating)
     minimumTier: 0, // minimum tier a user needs to take part
     distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000" // the rTKNs that are not sold get forwarded here (0x00.. will burn them)
   }
@@ -59,7 +58,7 @@ export async function saleExample() {
       constants: [1],
       sources: [
         ethers.utils.concat([
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 0),
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.VAL, 0),
         ]),
       ],
       stackLength: 1,
@@ -67,10 +66,10 @@ export async function saleExample() {
     };
 
     // const blockNumber = 1;
-    //
-    // // saleScriptGenerator can be used for gating who can start the sale
-    // // rainSDK.SaleDurationInTimestamp (todo check the saleScriptGenerator in rain-sdk)
-    //
+
+    // saleScriptGenerator can be used for gating who can start the sale
+    // rainSDK.SaleDurationInTimestamp (todo check the saleScriptGenerator in rain-sdk)
+
     // saleConfig.canStartStateConfig = {
     //   constants: [blockNumber],
     //   sources: [
@@ -88,7 +87,7 @@ export async function saleExample() {
       constants: [1],
       sources: [
         ethers.utils.concat([
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 0),
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.VAL, 0),
         ]),
       ],
       stackLength: 1,
@@ -101,29 +100,29 @@ export async function saleExample() {
       sources: [
         ethers.utils.concat([
           // put onto the stack, the amount the current user wants to buy
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.CURRENT_BUY_UNITS), // runtime value from the context
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.CURRENT_BUY_UNITS),
 
           // put onto the stack, the current token balance of the user (the Sale's rTKN represented in the smart contract)
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.TOKEN_ADDRESS),
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.SENDER),
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.IERC20_BALANCE_OF),
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.TOKEN_ADDRESS),
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.SENDER),
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.IERC20_BALANCE_OF),
 
           // add the first two elements of the stack (current buy units and balance of that user)
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.ADD, 2),
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.ADD, 2),
 
           // here we have a potential new value which we will compare to walletCap
 
           // and then check if it exceeds the walletCap (ie the amount allowed)
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 1),// walletCap ()
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.GREATER_THAN), // this will put a boolean on the stack (true: 1, false: 0)
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.VAL, 1),// walletCap ()
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.GREATER_THAN), // this will put a boolean on the stack (true: 1, false: 0)
 
           // this will behave like a minimum wallet cap, so you cant buy below this amount
-          // rainSDK.VM.op(rainSDK.Sale.Opcodes.LESS_THAN), // this will put a boolean on the stack (true: 1, false: 0)
+          // rainSDK.utils.op(rainSDK.Sale.Opcodes.LESS_THAN), // this will put a boolean on the stack (true: 1, false: 0)
 
           // eager if will get the 1st (result of greater than) and 3rd value
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 2), // `MaxUint256` this will be executed if the check above is true (this is an infinity price so it can't be bought)
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.VAL, 0), // `staticPrice` this will be executed if the check above is false (staticPrice is the price that the user wants to exchange the tokens for)
-          rainSDK.VM.op(rainSDK.Sale.Opcodes.EAGER_IF),
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.VAL, 2), // `MaxUint256` this will be executed if the check above is true (this is an infinity price so it can't be bought)
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.VAL, 0), // `staticPrice` this will be executed if the check above is false (staticPrice is the price that the user wants to exchange the tokens for)
+          rainSDK.utils.op(rainSDK.Sale.Opcodes.EAGER_IF),
         ]),
       ],
       stackLength: 10,
@@ -149,7 +148,7 @@ export async function saleExample() {
 
     // ### Interact with the newly deployed ecosystem
 
-    console.log('Info: Starting Sale.');
+    console.log('Info: Starting The Sale.');
     const startStatusTransaction = await saleContract.start();
     const startStatusReceipt = await startStatusTransaction.wait();
     console.log('Info: Sale Started Status:', startStatusReceipt);
@@ -158,7 +157,14 @@ export async function saleExample() {
     const DESIRED_UNITS = ethers.utils.parseUnits("1", ERC20_DECIMALS); // 1 of rTKN
 
     let price = await saleContract.calculatePrice(DESIRED_UNITS); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number)
-    console.log(`Info: Price of tokens in the Sale: ${price/10^ERC20_DECIMALS}`); // todo check the price is correct
+    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**18)}`); // todo check the price is correct
+    
+    // connect to the reserve token and approve the spend limit for the buy, to be able to perform the "buy" transaction.
+    const reserveContract = new rainSDK.ERC20("0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A", signer)
+    const approveTransaction = await reserveContract.approve(saleContract.address, DESIRED_UNITS);
+    const approveReceipt = await approveTransaction.wait();
+    console.log(`Info: Approve Status:`, approveReceipt);
+
 
     // configure buy for the sale (We have set this to Matic which is also used for paying gas fees, but this could easily be set to usdcc or some other token)
     const buyConfig = {
@@ -178,15 +184,19 @@ export async function saleExample() {
     const buyStatusTransaction = await saleContract.buy(buyConfig);
     const buyStatusReceipt = await buyStatusTransaction.wait();
     console.log(`Info: Buy Status:`, buyStatusReceipt);
-
     console.log('------------------------------'); // separator
+
+    console.log('Info: Ending The Sale.');
+    const endStatusTransaction = await saleContract.end();
+    const endStatusReceipt = await endStatusTransaction.wait();
+    console.log('Info: Sale Ended Status:', endStatusReceipt);
+    console.log('------------------------------'); // separator
+
     console.log("Info: Done");
 
   } catch (err) {
     console.log(err);
   }
 }
-
-//saleSate.canStartStateConfig = new SaleDurationInTimestamp(startTimestamp).applyOwnership(deployer-addres)
 
 saleExample();
