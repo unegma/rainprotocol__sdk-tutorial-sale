@@ -1,6 +1,6 @@
 import * as rainSDK from "rain-sdk"; // rain SDK imported using importmap in index.html (or in package.json)
 import { ethers } from "ethers"; // ethers library imported using importmap in index.html (or in package.json)
-import { connect } from "./connect.js"; // a very basic connection implementation
+import { connect } from "./connect.js"; // a very basic web3 connection implementation
 import { opcodeData } from "./opcodeData.js"; // opcode data for RainVM
 
 // tutorial: https://docs.rainprotocol.xyz/guides/SDK/using-the-rain-sdk-to-deploy-a-sale-example-with-opcodes/
@@ -67,8 +67,8 @@ export async function saleExample() {
     console.log('Info: Sale Started Status:', startStatusReceipt);
     console.log('------------------------------'); // separator
 
-    let price = await saleContract.calculatePrice(DESIRED_UNITS); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number)
-    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**ERC20_DECIMALS)}`); // 10 to the power of erc20_decimals
+    let price = await saleContract.calculatePrice(DESIRED_UNITS); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
+    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**ERC20_DECIMALS)}`); // 10 to the power of ERC20_DECIMALS
 
     // connect to the reserve token and approve the spend limit for the buy, to be able to perform the "buy" transaction.
     console.log(`Info: Connecting to Reserve token for approve:`, RESERVE_TOKEN);
@@ -78,16 +78,12 @@ export async function saleExample() {
     console.log(`Info: Approve Status:`, approveReceipt);
     console.log('------------------------------'); // separator
 
-    // configure buy for the sale (We have set this to Matic which is also used for paying gas fees, but this could easily be set to usdcc or some other token)
     const buyConfig = {
       feeRecipient: address,
-      fee: ethers.utils.parseUnits("0", ERC20_DECIMALS), // TODO IS THIS NEEDED TO BE toNumber(). no // todo why does this work as 0.1 if eth doesn't have decimals
-      // checks desiredUnits first, then minimumUnits (e.g. if there aren't any left over in the sale)
-      minimumUnits: DESIRED_UNITS,
+      fee: ethers.utils.parseUnits("0", ERC20_DECIMALS), // fee to be taken by the frontend
+      minimumUnits: DESIRED_UNITS, // this will cause the sale to fail if there are (DESIRED_UNITS - remainingUnits) left in the sale
       desiredUnits: DESIRED_UNITS,
-      // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice)
-      maximumPrice: ethers.constants.MaxUint256, // 0.001 matic? // TODO VERY ARBITRARY ETHERS CONSTANT MAX AMOUNT // todo why do we set this? // TODO IS THIS NEEDED TO BE toNumber()
-      // maximumPrice: staticPrice, // 0.001 matic? // TODO VERY ARBITRARY ETHERS CONSTANT MAX AMOUNT // todo why do we set this? // TODO IS THIS NEEDED TO BE toNumber()
+      maximumPrice: ethers.constants.MaxUint256, // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as staticPrice?
     }
 
     console.log(`Info: Buying from Sale with parameters:`, buyConfig);
