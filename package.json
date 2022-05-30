@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npx serve",
-    "DEPLOY": "aws --profile unegma s3 sync --delete ./ s3://rain-sale.unegma.work/"
+    "DEPLOY": "aws --profile unegma s3 sync --delete ./ s3://rain-sale.unegma.work/ --exclude '.idea/*' --exclude '.git/*'"
   },
   "author": "",
   "license": "ISC"
