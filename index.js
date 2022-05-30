@@ -42,6 +42,17 @@ export async function saleExample() {
       distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000" // the rTKNs that are not sold get forwarded here (0x00.. will burn them)
     }
 
+    console.log("Info: It is important to let your users know how many transactions to expect and what they are..\n" +
+      "This example consists of 5 Transactions:\n" +
+      "* Create Sale (For Admins) (gas cost at circa 2022-05-30T15:32:44Z: 0.044359 MATIC)\n" + // todo check how much gas costs can fluctuate (gas cost at 2022-05-30T15:27:32Z: 0.001992 MATIC) (gas cost at 2022-05-30T15:32:44Z: 0.044359 MATIC)
+      "* Start Sale (For Admins) (gas cost at circa 2022-05-30T15:32:44Z: 0.001326 MATIC) \n" +
+      // todo what is this contract address?
+      "* Give Permission to 0x642d4e6d828436ee95658c3462b46dafc1d0a61a to access USDCC (For Users) (¿fee? at circa 2022-05-30T15:32:44Z: 0.000898 MATIC) \n" +
+      "* Buying from Sale (For Users) (gas cost at circa 2022-05-30T15:32:44Z: 0.00060141 MATIC) \n" +
+      "* End Sale (For Admins) (gas cost at circa 2022-05-30T15:32:44Z: 0.000159 MATIC) \n"
+    );
+    console.log('------------------------------'); // separator
+
     console.log("Info: Creating Sale with the following state:", saleConfig, redeemableConfig);
     const saleContract = await rainSDK.Sale.deploy(signer, saleConfig, redeemableConfig);
     console.log('Result: Sale Contract:', saleContract); // the Sale contract and corresponding address
@@ -56,8 +67,7 @@ export async function saleExample() {
     console.log('------------------------------'); // separator
 
     let price = await saleContract.calculatePrice(DESIRED_UNITS); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number)
-    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**18)}`); // todo check the price is correct
-    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**ERC20_DECIMALS)}`); // todo check the price is correct
+    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**ERC20_DECIMALS)}`); // 10 to the power of erc20_decimals
 
     // connect to the reserve token and approve the spend limit for the buy, to be able to perform the "buy" transaction.
     console.log(`Info: Connecting to Reserve token for approve:`, RESERVE_TOKEN);
