@@ -42,14 +42,15 @@ export async function saleExample() {
       distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000" // the rTKNs that are not sold get forwarded here (0x00.. will burn them)
     }
 
-    console.log("Info: It is important to let your users know how many transactions to expect and what they are..\n" +
-      "This example consists of 5 Transactions:\n" +
-      "* Create Sale (For Admins) (gas cost at circa 2022-05-30T15:32:44Z: 0.044359 MATIC)\n" + // todo check how much gas costs can fluctuate (gas cost at 2022-05-30T15:27:32Z: 0.001992 MATIC) (gas cost at 2022-05-30T15:32:44Z: 0.044359 MATIC)
-      "* Start Sale (For Admins) (gas cost at circa 2022-05-30T15:32:44Z: 0.001326 MATIC) \n" +
-      // todo what is this contract address?
-      "* Give Permission to 0x642d4e6d828436ee95658c3462b46dafc1d0a61a to access USDCC (For Users) (¿fee? at circa 2022-05-30T15:32:44Z: 0.000898 MATIC) \n" +
-      "* Buying from Sale (For Users) (gas cost at circa 2022-05-30T15:32:44Z: 0.00060141 MATIC) \n" +
-      "* End Sale (For Admins) (gas cost at circa 2022-05-30T15:32:44Z: 0.000159 MATIC) \n"
+    // todo what happens if one fails (inform users)
+    console.warn("Info: It is important to let your users know how many transactions to expect and what they are. " +
+      "This example consists of 5 Transactions:\n\n" +
+      "* Create Sale (For Admins) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.002108 MATIC)\n" + // todo check how much gas costs can fluctuate (gas cost at 2022-05-30T15:27:32Z: 0.001992 MATIC) (gas cost at 2022-05-30T15:32:44Z: 0.044359 MATIC)
+      "* Start Sale (For Admins) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000061 MATIC) \n" +
+      // todo what is this contract address? and is it approved to spend this again in future or only up to this amount?
+      "* Give Permission to 0x642d4e6d828436ee95658c3462b46dafc1d0a61a to access USDCC (For Users) (fee+gas at circa 2022-05-30T15:32:44Z: 0.00009 MATIC) \n" +
+      "* Buying from Sale (For Users) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000531 MATIC) \n" +
+      "* End Sale (For Admins) (fee+gas at circa 2022-05-30T15:32:44Z: 0.000158 MATIC) \n"
     );
     console.log('------------------------------'); // separator
 
