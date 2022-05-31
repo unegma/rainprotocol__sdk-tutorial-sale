@@ -11,6 +11,8 @@ export async function saleExample() {
   const STATIC_PRICE = ethers.utils.parseUnits("0.001", ERC20_DECIMALS); // price 1000000000000000000 / 10^18 (reserve token erc deconimals)
   const DESIRED_UNITS = ethers.utils.parseUnits("1", ERC20_DECIMALS); // 1 of rTKN (this will be entered manually by a user)
 
+  // todo get the address of the deployed rTKN
+
   try {
     const { signer, address } = await connect(); // get the signer and account address using a very basic connection implementation
 
@@ -86,7 +88,7 @@ export async function saleExample() {
       maximumPrice: ethers.constants.MaxUint256, // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as staticPrice?
     }
 
-    console.log(`Info: Buying from Sale with parameters:`, buyConfig);
+    console.log(`Info: Buying from Sale with parameters:`, buyConfig); // todo make it more obvious how many are being bought
     const buyStatusTransaction = await saleContract.buy(buyConfig);
     const buyStatusReceipt = await buyStatusTransaction.wait();
     console.log(`Info: Buy Status:`, buyStatusReceipt);
