@@ -43,6 +43,7 @@ export async function saleExample() {
       distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000" // the rTKNs that are not sold get forwarded here (0x00.. will burn them)
     }
 
+    // todo get ratios of costs
     // todo what happens if one fails (inform users)
     console.warn("Info: It is important to let your users know how many transactions to expect and what they are. " +
       "This example consists of 5 Transactions:\n\n" +
@@ -59,7 +60,7 @@ export async function saleExample() {
     const saleContract = await rainSDK.Sale.deploy(signer, saleConfig, redeemableConfig);
     console.log('Result: Sale Contract:', saleContract); // the Sale contract and corresponding address
     const redeemableContract = await saleContract.getRedeemable();
-    console.log('Result: Redeemable Address:', redeemableContract); // the Sale contract and corresponding address
+    console.log('Result: Redeemable Contract:', redeemableContract); // the Sale contract and corresponding address
     console.log('------------------------------'); // separator
 
     // ### Interact with the newly deployed ecosystem
@@ -67,19 +68,20 @@ export async function saleExample() {
     console.log('Info: Starting The Sale.');
     const startStatusTransaction = await saleContract.start();
     const startStatusReceipt = await startStatusTransaction.wait();
-    console.log('Info: Sale Started Status:', startStatusReceipt);
+    console.log('Info: Sale Started Receipt:', startStatusReceipt);
     console.log('------------------------------'); // separator
 
-    let price = await saleContract.calculatePrice(DESIRED_UNITS_OF_REDEEMABLE); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
-    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**REDEEMABLE_ERC20_DECIMALS)}`); // 10 to the power of REDEEMABLE_ERC20_DECIMALS
-
     // connect to the reserve token and approve the spend limit for the buy, to be able to perform the "buy" transaction.
-    console.log(`Info: Connecting to Reserve token for approve:`, RESERVE_TOKEN_ADDRESS);
+    console.log(`Info: Connecting to Reserve token for approval of spend:`, RESERVE_TOKEN_ADDRESS);
     const reserveContract = new rainSDK.ERC20(RESERVE_TOKEN_ADDRESS, signer)
     const approveTransaction = await reserveContract.approve(saleContract.address, DESIRED_UNITS_OF_REDEEMABLE);
     const approveReceipt = await approveTransaction.wait();
-    console.log(`Info: Approve Status:`, approveReceipt);
+    console.log(`Info: ReserveContract:`, reserveContract);
+    console.log(`Info: Approve Receipt:`, approveReceipt);
     console.log('------------------------------'); // separator
+
+    let priceOfRedeemableInUnitsOfReserve = await saleContract.calculatePrice(DESIRED_UNITS_OF_REDEEMABLE); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
+    console.log(`Info: Price of tokens in the Sale: ${priceOfRedeemableInUnitsOfReserve.toNumber()/(10**REDEEMABLE_ERC20_DECIMALS)} ${await reserveContract.symbol()} (${reserveContract.address})`); // 10 to the power of REDEEMABLE_ERC20_DECIMALS
 
     const buyConfig = {
       feeRecipient: address,
@@ -89,16 +91,16 @@ export async function saleExample() {
       maximumPrice: ethers.constants.MaxUint256, // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as STATIC_RESERVE_PRICE_OF_REDEEMABLE?
     }
 
-    console.log(`Info: Buying ${DESIRED_UNITS_OF_REDEEMABLE} of ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`, buyConfig); // todo check this
+    console.log(`Info: Buying ${DESIRED_UNITS_OF_REDEEMABLE} ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`, buyConfig); // todo check this
     const buyStatusTransaction = await saleContract.buy(buyConfig);
     const buyStatusReceipt = await buyStatusTransaction.wait();
-    console.log(`Info: Buy Status:`, buyStatusReceipt);
+    console.log(`Info: Buy Receipt:`, buyStatusReceipt);
     console.log('------------------------------'); // separator
 
     console.log('Info: Ending The Sale.');
     const endStatusTransaction = await saleContract.end();
     const endStatusReceipt = await endStatusTransaction.wait();
-    console.log('Info: Sale Ended Status:', endStatusReceipt);
+    console.log('Info: Sale Ended Receipt:', endStatusReceipt);
     console.log('------------------------------'); // separator
 
     console.log("Info: Done");
