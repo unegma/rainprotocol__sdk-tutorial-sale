@@ -5,11 +5,13 @@ import { opcodeData } from "./opcodeData.js"; // opcode data for RainVM
 
 // tutorial: https://docs.rainprotocol.xyz/guides/SDK/using-the-rain-sdk-to-deploy-a-sale-example-with-opcodes/
 export async function saleExample() {
-  const ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
-  const RESERVE_TOKEN = '0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A'; // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals). if you want to use MATIC, it needs to be wrapped Matic
-  const WALLET_CAP = ethers.constants.MaxUint256; // no max otherwise can do: ethers.utils.parseUnits("100", ERC20_DECIMALS)
-  const STATIC_PRICE = ethers.utils.parseUnits("0.001", ERC20_DECIMALS); // price 1000000000000000000 / 10^18 (reserve token erc deconimals)
-  const DESIRED_UNITS = ethers.utils.parseUnits("1", ERC20_DECIMALS); // 1 of rTKN (this will be entered manually by a user)
+  const RESERVE_TOKEN_ADDRESS = '0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A'; // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals). if you want to use MATIC, it needs to be wrapped Matic
+  const RESERVE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
+  const REDEEMABLE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
+  const REDEEMABLE_WALLET_CAP = ethers.constants.MaxUint256; // no max otherwise can do: ethers.utils.parseUnits("100", ERC20_DECIMALS_REDEEMABLE
+  const STATIC_RESERVE_PRICE_OF_REDEEMABLE = ethers.utils.parseUnits("0.001", RESERVE_ERC20_DECIMALS); // price 1000000000000000000 / 10^18 (reserve token erc decimals) // static price of the REDEEMABLE denoted in RESERVE
+  const DESIRED_UNITS_OF_REDEEMABLE = ethers.utils.parseUnits("1", REDEEMABLE_ERC20_DECIMALS); // 1 of rTKN (this will usualy be entered manually by a user)
+  const SALE_TIMEOUT_IN_BLOCKS = 10000; // for MUMBAI 100 blocks (10 mins) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
 
   try {
     const { signer, address } = await connect(); // get the signer and account address using a very basic connection implementation
@@ -19,22 +21,22 @@ export async function saleExample() {
     const saleConfig = {
       canStartStateConfig: opcodeData.canStartStateConfig, // config for the start of the Sale (see opcodes section below)
       canEndStateConfig: opcodeData.canEndStateConfig, // config for the end of the Sale (see opcodes section below)
-      calculatePriceStateConfig: opcodeData.calculatePriceStateConfig(STATIC_PRICE, WALLET_CAP), // config for the `calculatePrice` function (see opcodes section below)
+      calculatePriceStateConfig: opcodeData.calculatePriceStateConfig(STATIC_RESERVE_PRICE_OF_REDEEMABLE, REDEEMABLE_WALLET_CAP), // config for the `calculatePrice` function (see opcodes section below)
       recipient: address, // who will receive the RESERVE token (e.g. USDCC) after the Sale completes
-      reserve: RESERVE_TOKEN, // the reserve token contract address (MUMBAI MATIC in this case)
-      saleTimeout: 10000, // for MUMBAI 100 blocks (10 mins) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
-      cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // todo this will stay as blocks in upcoming releases
-      minimumRaise: ethers.utils.parseUnits("1000", ERC20_DECIMALS), // minimum to complete a Raise
-      dustSize: ethers.utils.parseUnits("0", ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
+      reserve: RESERVE_TOKEN_ADDRESS, // the reserve token contract address (MUMBAI MATIC in this case)
+      saleTimeout: SALE_TIMEOUT_IN_BLOCKS,
+      cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // this will stay as blocks in upcoming releases
+      minimumRaise: ethers.utils.parseUnits("1000", RESERVE_ERC20_DECIMALS), // minimum to complete a Raise
+      dustSize: ethers.utils.parseUnits("0", RESERVE_ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
     };
     const redeemableConfig = {
+      // todo can erc721 be used instead?
       erc20Config: { // config for the redeemable token (rTKN) which participants will get in exchange for reserve tokens
         name: "Raise token", // the name of the rTKN
         symbol: "rTKN", // the symbol for your rTKN
         distributor: "0x0000000000000000000000000000000000000000", // distributor address
-        initialSupply: ethers.utils.parseUnits("10000", ERC20_DECIMALS), // initial rTKN supply
+        initialSupply: ethers.utils.parseUnits("10000", REDEEMABLE_ERC20_DECIMALS), // initial rTKN supply
       },
-      // todo can erc721 be used instead?
       // todo why can't I decompile? https://mumbai.polygonscan.com/address/0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de#code
       tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating)
       minimumTier: 0, // minimum tier a user needs to take part
@@ -68,26 +70,26 @@ export async function saleExample() {
     console.log('Info: Sale Started Status:', startStatusReceipt);
     console.log('------------------------------'); // separator
 
-    let price = await saleContract.calculatePrice(DESIRED_UNITS); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
-    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**ERC20_DECIMALS)}`); // 10 to the power of ERC20_DECIMALS
+    let price = await saleContract.calculatePrice(DESIRED_UNITS_OF_REDEEMABLE); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
+    console.log(`Info: Price of tokens in the Sale: ${price.toNumber()/(10**REDEEMABLE_ERC20_DECIMALS)}`); // 10 to the power of REDEEMABLE_ERC20_DECIMALS
 
     // connect to the reserve token and approve the spend limit for the buy, to be able to perform the "buy" transaction.
-    console.log(`Info: Connecting to Reserve token for approve:`, RESERVE_TOKEN);
-    const reserveContract = new rainSDK.ERC20(RESERVE_TOKEN, signer)
-    const approveTransaction = await reserveContract.approve(saleContract.address, DESIRED_UNITS);
+    console.log(`Info: Connecting to Reserve token for approve:`, RESERVE_TOKEN_ADDRESS);
+    const reserveContract = new rainSDK.ERC20(RESERVE_TOKEN_ADDRESS, signer)
+    const approveTransaction = await reserveContract.approve(saleContract.address, DESIRED_UNITS_OF_REDEEMABLE);
     const approveReceipt = await approveTransaction.wait();
     console.log(`Info: Approve Status:`, approveReceipt);
     console.log('------------------------------'); // separator
 
     const buyConfig = {
       feeRecipient: address,
-      fee: ethers.utils.parseUnits("0", ERC20_DECIMALS), // fee to be taken by the frontend
-      minimumUnits: DESIRED_UNITS, // this will cause the sale to fail if there are (DESIRED_UNITS - remainingUnits) left in the sale
-      desiredUnits: DESIRED_UNITS,
-      maximumPrice: ethers.constants.MaxUint256, // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as staticPrice?
+      fee: ethers.utils.parseUnits("0", RESERVE_ERC20_DECIMALS), // fee to be taken by the frontend
+      minimumUnits: DESIRED_UNITS_OF_REDEEMABLE, // this will cause the sale to fail if there are (DESIRED_UNITS - remainingUnits) left in the sale
+      desiredUnits: DESIRED_UNITS_OF_REDEEMABLE,
+      maximumPrice: ethers.constants.MaxUint256, // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as STATIC_RESERVE_PRICE_OF_REDEEMABLE?
     }
 
-    console.log(`Info: Buying ${DESIRED_UNITS} of ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`, buyConfig);
+    console.log(`Info: Buying ${DESIRED_UNITS_OF_REDEEMABLE} of ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`, buyConfig); // todo check this
     const buyStatusTransaction = await saleContract.buy(buyConfig);
     const buyStatusReceipt = await buyStatusTransaction.wait();
     console.log(`Info: Buy Status:`, buyStatusReceipt);
