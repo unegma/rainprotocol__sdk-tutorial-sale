@@ -11,14 +11,11 @@ export async function saleExample() {
   const STATIC_PRICE = ethers.utils.parseUnits("0.001", ERC20_DECIMALS); // price 1000000000000000000 / 10^18 (reserve token erc deconimals)
   const DESIRED_UNITS = ethers.utils.parseUnits("1", ERC20_DECIMALS); // 1 of rTKN (this will be entered manually by a user)
 
-  // todo get the address of the deployed rTKN
-
   try {
     const { signer, address } = await connect(); // get the signer and account address using a very basic connection implementation
 
     // ### Configure and Deploy Sale
 
-    // todo rename to saleConfig in other tutorials, rename to RECEIPT in other tutorials
     const saleConfig = {
       canStartStateConfig: opcodeData.canStartStateConfig, // config for the start of the Sale (see opcodes section below)
       canEndStateConfig: opcodeData.canEndStateConfig, // config for the end of the Sale (see opcodes section below)
@@ -59,6 +56,8 @@ export async function saleExample() {
     console.log("Info: Creating Sale with the following state:", saleConfig, redeemableConfig);
     const saleContract = await rainSDK.Sale.deploy(signer, saleConfig, redeemableConfig);
     console.log('Result: Sale Contract:', saleContract); // the Sale contract and corresponding address
+    const redeemableContract = await saleContract.getRedeemable();
+    console.log('Result: Redeemable Address:', redeemableContract); // the Sale contract and corresponding address
     console.log('------------------------------'); // separator
 
     // ### Interact with the newly deployed ecosystem
