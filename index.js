@@ -34,7 +34,7 @@ export async function saleExample() {
         distributor: "0x0000000000000000000000000000000000000000", // distributor address
         initialSupply: ethers.utils.parseUnits("10000", ERC20_DECIMALS), // initial rTKN supply
       },
-      // todo can tier be removed? can erc721 be used instead?
+      // todo can erc721 be used instead?
       // todo why can't I decompile? https://mumbai.polygonscan.com/address/0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de#code
       tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating)
       minimumTier: 0, // minimum tier a user needs to take part
@@ -87,7 +87,7 @@ export async function saleExample() {
       maximumPrice: ethers.constants.MaxUint256, // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as staticPrice?
     }
 
-    console.log(`Info: Buying from Sale with parameters:`, buyConfig); // todo make it more obvious how many are being bought
+    console.log(`Info: Buying ${DESIRED_UNITS} of ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`, buyConfig);
     const buyStatusTransaction = await saleContract.buy(buyConfig);
     const buyStatusReceipt = await buyStatusTransaction.wait();
     console.log(`Info: Buy Status:`, buyStatusReceipt);
