@@ -9,9 +9,11 @@ export async function saleExample() {
   const RESERVE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
   const REDEEMABLE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
   const REDEEMABLE_WALLET_CAP = ethers.constants.MaxUint256; // no max otherwise can do: ethers.utils.parseUnits("100", ERC20_DECIMALS_REDEEMABLE
-  const STATIC_RESERVE_PRICE_OF_REDEEMABLE = ethers.utils.parseUnits("0.001", RESERVE_ERC20_DECIMALS); // price 1000000000000000000 / 10^18 (reserve token erc decimals) // static price of the REDEEMABLE denoted in RESERVE
+  const REDEEMABLE_INITIAL_SUPPLY = 100; // initial supply of redeemable tokens
+  const STATIC_RESERVE_PRICE_OF_REDEEMABLE = ethers.utils.parseUnits("1", RESERVE_ERC20_DECIMALS); // price 1000000000000000000 / 10^18 (reserve token erc decimals) // static price of the REDEEMABLE denoted in RESERVE
+  const SALE_TIMEOUT_IN_BLOCKS = 600; // for MUMBAI 100 blocks (10 mins) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
+
   const DESIRED_UNITS_OF_REDEEMABLE = ethers.utils.parseUnits("1", REDEEMABLE_ERC20_DECIMALS); // 1 of rTKN (this will usualy be entered manually by a user)
-  const SALE_TIMEOUT_IN_BLOCKS = 10000; // for MUMBAI 100 blocks (10 mins) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
 
   try {
     const { signer, address } = await connect(); // get the signer and account address using a very basic connection implementation
@@ -26,7 +28,8 @@ export async function saleExample() {
       reserve: RESERVE_TOKEN_ADDRESS, // the reserve token contract address (MUMBAI MATIC in this case)
       saleTimeout: SALE_TIMEOUT_IN_BLOCKS,
       cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // this will stay as blocks in upcoming releases
-      minimumRaise: ethers.utils.parseUnits("1000", RESERVE_ERC20_DECIMALS), // minimum to complete a Raise
+      // USING THE REDEEMABLE_INITIAL_SUPPLY HERE BECAUSE WE HAVE CONFIGURED 1 REDEEMABLE TO COST 1 RESERVE (using redeemable with reserve token decimals purposely)
+      minimumRaise: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY, RESERVE_ERC20_DECIMALS), // minimum to complete a Raise
       dustSize: ethers.utils.parseUnits("0", RESERVE_ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
     };
     const redeemableConfig = {
@@ -35,33 +38,35 @@ export async function saleExample() {
         name: "Raise token", // the name of the rTKN
         symbol: "rTKN", // the symbol for your rTKN
         distributor: "0x0000000000000000000000000000000000000000", // distributor address
-        initialSupply: ethers.utils.parseUnits("10000", REDEEMABLE_ERC20_DECIMALS), // initial rTKN supply
+        initialSupply: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY, REDEEMABLE_ERC20_DECIMALS), // initial rTKN supply
       },
       // todo why can't I decompile? https://mumbai.polygonscan.com/address/0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de#code
-      tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating)
+      tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating) this can be ignored, but if deploying on any network other than mumbai, may need to be changed
       minimumTier: 0, // minimum tier a user needs to take part
       distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000" // the rTKNs that are not sold get forwarded here (0x00.. will burn them)
     }
 
-    // todo get ratios of costs
-    // todo what happens if one fails (inform users)
     console.warn("Info: It is important to let your users know how many transactions to expect and what they are. " +
       "This example consists of 5 Transactions:\n\n" +
-      "* Create Sale (For Admins) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.002108 MATIC)\n" + // todo check how much gas costs can fluctuate (gas cost at 2022-05-30T15:27:32Z: 0.001992 MATIC) (gas cost at 2022-05-30T15:32:44Z: 0.044359 MATIC)
+      "* ## For Admins:\n" +
+      "* Create Sale (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.002108 MATIC)\n" +
       "* Start Sale (For Admins) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000061 MATIC) \n" +
       // todo what is this contract address? and is it approved to spend this again in future or only up to this amount?
+      "* ## For Users:\n" +
       "* Give Permission to 0x642d4e6d828436ee95658c3462b46dafc1d0a61a to access USDCC (For Users) (fee+gas at circa 2022-05-30T15:32:44Z: 0.00009 MATIC) \n" +
       "* Buying from Sale (For Users) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000531 MATIC) \n" +
+      "* ## For Admins:\n" +
       "* End Sale (For Admins) (fee+gas at circa 2022-05-30T15:32:44Z: 0.000158 MATIC) \n"
     );
+
     console.log('------------------------------'); // separator
 
+    console.log('## Simulating Admin Interactions');
     console.log("Info: Creating Sale with the following state:", saleConfig, redeemableConfig);
     const saleContract = await rainSDK.Sale.deploy(signer, saleConfig, redeemableConfig);
     console.log('Result: Sale Contract:', saleContract); // the Sale contract and corresponding address
     const redeemableContract = await saleContract.getRedeemable();
     console.log('Result: Redeemable Contract:', redeemableContract); // the Sale contract and corresponding address
-    console.log('------------------------------'); // separator
 
     // ### Interact with the newly deployed ecosystem
 
@@ -69,8 +74,10 @@ export async function saleExample() {
     const startStatusTransaction = await saleContract.start();
     const startStatusReceipt = await startStatusTransaction.wait();
     console.log('Info: Sale Started Receipt:', startStatusReceipt);
+
     console.log('------------------------------'); // separator
 
+    console.log('## Simulating User Interactions');
     // connect to the reserve token and approve the spend limit for the buy, to be able to perform the "buy" transaction.
     console.log(`Info: Connecting to Reserve token for approval of spend:`, RESERVE_TOKEN_ADDRESS);
     const reserveContract = new rainSDK.ERC20(RESERVE_TOKEN_ADDRESS, signer)
@@ -78,10 +85,6 @@ export async function saleExample() {
     const approveReceipt = await approveTransaction.wait();
     console.log(`Info: ReserveContract:`, reserveContract);
     console.log(`Info: Approve Receipt:`, approveReceipt);
-    console.log('------------------------------'); // separator
-
-    let priceOfRedeemableInUnitsOfReserve = await saleContract.calculatePrice(DESIRED_UNITS_OF_REDEEMABLE); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
-    console.log(`Info: Price of tokens in the Sale: ${priceOfRedeemableInUnitsOfReserve.toNumber()/(10**REDEEMABLE_ERC20_DECIMALS)} ${await reserveContract.symbol()} (${reserveContract.address})`); // 10 to the power of REDEEMABLE_ERC20_DECIMALS
 
     const buyConfig = {
       feeRecipient: address,
@@ -90,17 +93,21 @@ export async function saleExample() {
       desiredUnits: DESIRED_UNITS_OF_REDEEMABLE,
       maximumPrice: ethers.constants.MaxUint256, // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as STATIC_RESERVE_PRICE_OF_REDEEMABLE?
     }
-
+    let priceOfRedeemableInUnitsOfReserve = await saleContract.calculatePrice(DESIRED_UNITS_OF_REDEEMABLE); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
+    console.log(`Info: Price of tokens in the Sale: ${priceOfRedeemableInUnitsOfReserve.toNumber()/(10**REDEEMABLE_ERC20_DECIMALS)} ${await reserveContract.symbol()} (${reserveContract.address})`); // 10 to the power of REDEEMABLE_ERC20_DECIMALS
     console.log(`Info: Buying ${DESIRED_UNITS_OF_REDEEMABLE} ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`, buyConfig); // todo check this
     const buyStatusTransaction = await saleContract.buy(buyConfig);
     const buyStatusReceipt = await buyStatusTransaction.wait();
     console.log(`Info: Buy Receipt:`, buyStatusReceipt);
+
     console.log('------------------------------'); // separator
 
+    console.log('## Simulating Admin Interactions');
     console.log('Info: Ending The Sale.');
     const endStatusTransaction = await saleContract.end();
     const endStatusReceipt = await endStatusTransaction.wait();
     console.log('Info: Sale Ended Receipt:', endStatusReceipt);
+
     console.log('------------------------------'); // separator
 
     console.log("Info: Done");
