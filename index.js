@@ -29,7 +29,7 @@ export async function saleExample() {
       saleTimeout: SALE_TIMEOUT_IN_BLOCKS,
       cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // this will stay as blocks in upcoming releases
       // USING THE REDEEMABLE_INITIAL_SUPPLY HERE BECAUSE WE HAVE CONFIGURED 1 REDEEMABLE TO COST 1 RESERVE (using redeemable with reserve token decimals purposely)
-      minimumRaise: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY, RESERVE_ERC20_DECIMALS), // minimum to complete a Raise
+      minimumRaise: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY.toString(), RESERVE_ERC20_DECIMALS), // minimum to complete a Raise
       dustSize: ethers.utils.parseUnits("0", RESERVE_ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
     };
     const redeemableConfig = {
@@ -38,9 +38,8 @@ export async function saleExample() {
         name: "Redeemable token", // the name of the rTKN
         symbol: "rTKN", // the symbol for your rTKN
         distributor: "0x0000000000000000000000000000000000000000", // distributor address
-        initialSupply: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY, REDEEMABLE_ERC20_DECIMALS), // initial rTKN supply
+        initialSupply: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY.toString(), REDEEMABLE_ERC20_DECIMALS), // initial rTKN supply
       },
-      // todo why can't I decompile? https://mumbai.polygonscan.com/address/0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de#code
       tier: "0xC064055DFf6De32f44bB7cCB0ca59Cbd8434B2de", // tier contract address (used for gating) this can be ignored, but if deploying on any network other than mumbai, may need to be changed
       minimumTier: 0, // minimum tier a user needs to take part
       distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000" // the rTKNs that are not sold get forwarded here (0x00.. will burn them)
