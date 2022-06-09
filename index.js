@@ -35,7 +35,7 @@ export async function saleExample() {
     const redeemableConfig = {
       // todo can erc721 be used instead?
       erc20Config: { // config for the redeemable token (rTKN) which participants will get in exchange for reserve tokens
-        name: "Raise token", // the name of the rTKN
+        name: "Redeemable token", // the name of the rTKN
         symbol: "rTKN", // the symbol for your rTKN
         distributor: "0x0000000000000000000000000000000000000000", // distributor address
         initialSupply: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY, REDEEMABLE_ERC20_DECIMALS), // initial rTKN supply
