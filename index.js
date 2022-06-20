@@ -37,8 +37,13 @@ export async function saleExample() {
       reserve: RESERVE_TOKEN_ADDRESS, // the reserve token contract address (MUMBAI MATIC in this case)
       saleTimeout: SALE_TIMEOUT_IN_BLOCKS, // todo check if will stay as blocks or change to timestamps in upcoming releases
       cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // this will stay as blocks in upcoming releases
-      minimumRaise: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY.toString(), RESERVE_ERC20_DECIMALS), // minimum to complete a Raise // USING THE REDEEMABLE_INITIAL_SUPPLY HERE BECAUSE WE HAVE CONFIGURED 1 REDEEMABLE TO COST 1 RESERVE (using redeemable with reserve token decimals purposely)
       dustSize: ethers.utils.parseUnits("0", RESERVE_ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
+
+      // setting to 1 for the escrow example in the next tutorial
+      minimumRaise: ethers.utils.parseUnits(DESIRED_UNITS_OF_REDEEMABLE.toString(), RESERVE_ERC20_DECIMALS), // minimum to complete a Raise // THIS WORKS WITH AN AMOUNT OF THE REDEEMABLE, BECAUSE THEY ARE CURRENTLY A 1 TO 1 MATCH, (MAKE SURE TO USE RESERVE_ERC20_DECIMALS)
+
+      // an example where sale needs to sell all to complete
+      // minimumRaise: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY.toString(), RESERVE_ERC20_DECIMALS), // minimum to complete a Raise // USING THE REDEEMABLE_INITIAL_SUPPLY HERE BECAUSE WE HAVE CONFIGURED 1 REDEEMABLE TO COST 1 RESERVE (using redeemable with reserve token decimals purposely)
     };
     const redeemableConfig = {
       // todo can erc721 be used instead?
