@@ -12,7 +12,7 @@ export async function saleExample() {
   const REDEEMABLE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
   const REDEEMABLE_WALLET_CAP = ethers.constants.MaxUint256; // no max otherwise can do: ethers.utils.parseUnits("100", ERC20_DECIMALS_REDEEMABLE
   const REDEEMABLE_INITIAL_SUPPLY = 100; // initial supply of redeemable tokens
-  const STATIC_RESERVE_PRICE_OF_REDEEMABLE = ethers.utils.parseUnits("1", RESERVE_ERC20_DECIMALS); // price 1000000000000000000 / 10^18 (reserve token erc decimals) // static price of the REDEEMABLE denoted in RESERVE
+  const STATIC_RESERVE_PRICE_OF_REDEEMABLE = 1; // price 1000000000000000000 / 10^18 (reserve token erc decimals) // static price of the REDEEMABLE denoted in RESERVE
   const SALE_TIMEOUT_IN_BLOCKS = 600; // for MUMBAI 100 blocks (10 mins) // todo this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
 
   const DESIRED_UNITS_OF_REDEEMABLE = ethers.utils.parseUnits("1", REDEEMABLE_ERC20_DECIMALS); // 1 of rTKN (this will usualy be entered manually by a user)
@@ -25,7 +25,10 @@ export async function saleExample() {
     const saleConfig = {
       canStartStateConfig: opcodeData.canStartStateConfig, // config for the start of the Sale (see opcodes section below)
       canEndStateConfig: opcodeData.canEndStateConfig, // config for the end of the Sale (see opcodes section below)
-      calculatePriceStateConfig: opcodeData.calculatePriceStateConfig(STATIC_RESERVE_PRICE_OF_REDEEMABLE, REDEEMABLE_WALLET_CAP), // config for the `calculatePrice` function (see opcodes section below)
+      calculatePriceStateConfig: opcodeData.calculatePriceStateConfig(
+        ethers.utils.parseUnits(STATIC_RESERVE_PRICE_OF_REDEEMABLE, RESERVE_ERC20_DECIMALS),
+        REDEEMABLE_WALLET_CAP
+      ), // config for the `calculatePrice` function (see opcodes section below)
       recipient: address, // who will receive the RESERVE token (e.g. USDCC) after the Sale completes
       reserve: RESERVE_TOKEN_ADDRESS, // the reserve token contract address (MUMBAI MATIC in this case)
       saleTimeout: SALE_TIMEOUT_IN_BLOCKS,
@@ -92,7 +95,7 @@ export async function saleExample() {
       fee: ethers.utils.parseUnits("0", RESERVE_ERC20_DECIMALS), // fee to be taken by the frontend
       minimumUnits: DESIRED_UNITS_OF_REDEEMABLE, // this will cause the sale to fail if there are (DESIRED_UNITS - remainingUnits) left in the sale
       desiredUnits: DESIRED_UNITS_OF_REDEEMABLE,
-      maximumPrice: STATIC_RESERVE_PRICE_OF_REDEEMABLE, // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as STATIC_RESERVE_PRICE_OF_REDEEMABLE?
+      maximumPrice: ethers.utils.parseUnits(STATIC_RESERVE_PRICE_OF_REDEEMABLE, RESERVE_ERC20_DECIMALS), // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as STATIC_RESERVE_PRICE_OF_REDEEMABLE?
     }
 
     // todo fix the price, displaying as `Info: Price of tokens in the Sale: 0.001`
