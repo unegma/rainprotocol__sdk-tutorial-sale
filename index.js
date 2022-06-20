@@ -22,7 +22,6 @@ export async function saleExample() {
     const { signer, address } = await connect(); // get the signer and account address using a very basic connection implementation
 
     // ### Configure and Deploy Sale
-
     const saleConfig = {
       canStartStateConfig: opcodeData.canStartStateConfig, // config for the start of the Sale (see opcodes section below)
       canEndStateConfig: opcodeData.canEndStateConfig, // config for the end of the Sale (see opcodes section below)
@@ -34,8 +33,7 @@ export async function saleExample() {
       reserve: RESERVE_TOKEN_ADDRESS, // the reserve token contract address (MUMBAI MATIC in this case)
       saleTimeout: SALE_TIMEOUT_IN_BLOCKS, // todo check if will stay as blocks or change to timestamps in upcoming releases
       cooldownDuration: 100, // this will be 100 blocks (10 mins on MUMBAI) // this will stay as blocks in upcoming releases
-      // USING THE REDEEMABLE_INITIAL_SUPPLY HERE BECAUSE WE HAVE CONFIGURED 1 REDEEMABLE TO COST 1 RESERVE (using redeemable with reserve token decimals purposely)
-      minimumRaise: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY.toString(), RESERVE_ERC20_DECIMALS), // minimum to complete a Raise
+      minimumRaise: ethers.utils.parseUnits(REDEEMABLE_INITIAL_SUPPLY.toString(), RESERVE_ERC20_DECIMALS), // minimum to complete a Raise // USING THE REDEEMABLE_INITIAL_SUPPLY HERE BECAUSE WE HAVE CONFIGURED 1 REDEEMABLE TO COST 1 RESERVE (using redeemable with reserve token decimals purposely)
       dustSize: ethers.utils.parseUnits("0", RESERVE_ERC20_DECIMALS), // todo check this: for bonding curve price curves (that generate a few left in the contract at the end)
     };
     const redeemableConfig = {
@@ -74,7 +72,6 @@ export async function saleExample() {
     console.log('Result: Redeemable Contract:', redeemableContract); // the Sale contract and corresponding address
 
     // ### Interact with the newly deployed ecosystem
-
     console.log('Info: Starting The Sale.');
     const startStatusTransaction = await saleContract.start();
     const startStatusReceipt = await startStatusTransaction.wait();
