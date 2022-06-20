@@ -3,25 +3,29 @@ import { ethers } from "ethers"; // ethers library imported using importmap in i
 import { connect } from "./connect.js"; // a very basic web3 connection implementation
 import { opcodeData } from "./opcodeData.js"; // opcode data for RainVM
 
-// tutorial: https://docs.rainprotocol.xyz/guides/SDK/using-the-rain-sdk-to-deploy-a-sale-example-with-opcodes/
+/**
+ * Sale Example
+ * Tutorials (see Getting Started: https://docs.rainprotocol.xyz
+ * @returns {Promise<void>}
+ */
 export async function saleExample() {
-
-  // constants (can put these into .env)
-  const RESERVE_TOKEN_ADDRESS = '0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A'; // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals). if you want to use MATIC, it needs to be wrapped Matic
-  const RESERVE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
-  const REDEEMABLE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
-  const REDEEMABLE_WALLET_CAP = ethers.constants.MaxUint256; // no max otherwise can do: ethers.utils.parseUnits("100", ERC20_DECIMALS_REDEEMABLE)
-  const REDEEMABLE_INITIAL_SUPPLY = 100; // initial supply of redeemable tokens, needs to be formatted using ethers.utils.parseUnits
-  const STATIC_RESERVE_PRICE_OF_REDEEMABLE = 1; // price 1000000000000000000 // 10^18 (reserve token erc decimals) // static price of the REDEEMABLE denoted in RESERVE // needs to be formatted using ethers.utils.parseUnits
-  const SALE_TIMEOUT_IN_BLOCKS = 600; // for MUMBAI 100 blocks (10 mins) // this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
-  const FRONTEND_FEE = 0; // fee to be taken by the frontend
-
-  const DESIRED_UNITS_OF_REDEEMABLE = 1; // 1 of rTKN (this will usually be entered manually by a user)
-
   try {
     const { signer, address } = await connect(); // get the signer and account address using a very basic connection implementation
 
     // ### Configure and Deploy Sale
+
+    // constants (can put these into .env)
+    const RESERVE_TOKEN_ADDRESS = '0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A'; // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals). if you want to use MATIC, it needs to be wrapped Matic
+    const RESERVE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
+    const REDEEMABLE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
+    const REDEEMABLE_WALLET_CAP = ethers.constants.MaxUint256; // no max otherwise can do: ethers.utils.parseUnits("100", ERC20_DECIMALS_REDEEMABLE)
+    const REDEEMABLE_INITIAL_SUPPLY = 100; // initial supply of redeemable tokens, needs to be formatted using ethers.utils.parseUnits
+    const STATIC_RESERVE_PRICE_OF_REDEEMABLE = 1; // price 1000000000000000000 // 10^18 (reserve token erc decimals) // static price of the REDEEMABLE denoted in RESERVE // needs to be formatted using ethers.utils.parseUnits
+    const SALE_TIMEOUT_IN_BLOCKS = 600; // for MUMBAI 100 blocks (10 mins) // this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
+    const FRONTEND_FEE = 0; // fee to be taken by the frontend
+
+    const DESIRED_UNITS_OF_REDEEMABLE = 1; // 1 of rTKN (this will usually be entered manually by a user)
+
     const saleConfig = {
       canStartStateConfig: opcodeData.canStartStateConfig, // config for the start of the Sale (see opcodes section below)
       canEndStateConfig: opcodeData.canEndStateConfig, // config for the end of the Sale (see opcodes section below)
@@ -62,16 +66,19 @@ export async function saleExample() {
       "* End Sale (For Admins) (fee+gas at circa 2022-05-30T15:32:44Z: 0.000158 MATIC) \n"
     );
 
-    console.log('------------------------------'); // separator
+    // todo maybe warn users they will need to have X matic in their wallet in order to complete ALL the transactions
 
-    console.log('## Simulating Admin Interactions');
+    console.log('### Section 1: (Admin Function) Create Sale');
     console.log("Info: Creating Sale with the following state:", saleConfig, redeemableConfig);
     const saleContract = await rainSDK.Sale.deploy(signer, saleConfig, redeemableConfig);
     console.log('Result: Sale Contract:', saleContract); // the Sale contract and corresponding address
     const redeemableContract = await saleContract.getRedeemable();
     console.log('Result: Redeemable Contract:', redeemableContract); // the Sale contract and corresponding address
 
-    // ### Interact with the newly deployed ecosystem
+    console.log('------------------------------'); // separator
+
+    console.log('### Section 2: (Admin Function) Start Sale');
+    console.log('(Note, a User can do this too, but it is more likely to be done by an Admin)');
     console.log('Info: Starting The Sale.');
     const startStatusTransaction = await saleContract.start();
     const startStatusReceipt = await startStatusTransaction.wait();
@@ -79,7 +86,7 @@ export async function saleExample() {
 
     console.log('------------------------------'); // separator
 
-    console.log('## Simulating User Interactions');
+    console.log('### Section 3: (User Function) Approve Spend and Buy');
     // connect to the reserve token and approve the spend limit for the buy, to be able to perform the "buy" transaction.
     console.log(`Info: Connecting to Reserve token for approval of spend:`, RESERVE_TOKEN_ADDRESS);
     const reserveContract = new rainSDK.ERC20(RESERVE_TOKEN_ADDRESS, signer)
@@ -110,7 +117,8 @@ export async function saleExample() {
 
     console.log('------------------------------'); // separator
 
-    console.log('## Simulating Admin Interactions');
+    console.log('### Section 4: (Admin Function) End Sale');
+    console.log('(Note, a User can do this too, but it is more likely to be done by an Admin)');
     console.log('Info: Ending The Sale.');
     const endStatusTransaction = await saleContract.end();
     const endStatusReceipt = await endStatusTransaction.wait();
