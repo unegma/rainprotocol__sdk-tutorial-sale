@@ -96,12 +96,8 @@ export async function saleExample() {
       fee: ethers.utils.parseUnits(FRONTEND_FEE.toString(), RESERVE_ERC20_DECIMALS), // fee to be taken by the frontend
       minimumUnits: ethers.utils.parseUnits(DESIRED_UNITS_OF_REDEEMABLE.toString(), REDEEMABLE_ERC20_DECIMALS), // this will cause the sale to fail if there are (DESIRED_UNITS - remainingUnits) left in the sale
       desiredUnits: ethers.utils.parseUnits(DESIRED_UNITS_OF_REDEEMABLE.toString(), REDEEMABLE_ERC20_DECIMALS),
-      maximumPrice: ethers.utils.parseUnits(STATIC_RESERVE_PRICE_OF_REDEEMABLE.toString(), RESERVE_ERC20_DECIMALS), // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice) // todo is this better as STATIC_RESERVE_PRICE_OF_REDEEMABLE?
+      maximumPrice: ethers.utils.parseUnits(STATIC_RESERVE_PRICE_OF_REDEEMABLE.toString(), RESERVE_ERC20_DECIMALS), // this is for preventing slippage (for static price curves, this isn't really needed and can be set to the same as staticPrice)
     }
-
-    // todo fix the price, displaying as `Info: Price of tokens in the Sale: 0.001`
-    // todo fix the price, displaying as `Info: Buying 1000000000000000000 of rTKN from Sale with parameters: `
-
 
     let priceOfRedeemableInUnitsOfReserve = await saleContract.calculatePrice(
       ethers.utils.parseUnits(DESIRED_UNITS_OF_REDEEMABLE.toString(), REDEEMABLE_ERC20_DECIMALS)
