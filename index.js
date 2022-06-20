@@ -107,7 +107,7 @@ export async function saleExample() {
       ethers.utils.parseUnits(DESIRED_UNITS_OF_REDEEMABLE.toString(), REDEEMABLE_ERC20_DECIMALS)
     ); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
     console.log(`Info: Price of tokens in the Sale: ${parseInt(priceOfRedeemableInUnitsOfReserve.toString())/(10**RESERVE_ERC20_DECIMALS)} ${await reserveContract.symbol()} (${reserveContract.address})`); // 10 to the power of REDEEMABLE_ERC20_DECIMALS
-    console.log(`Info: Buying ${parseInt(DESIRED_UNITS_OF_REDEEMABLE.toString())/(10**REDEEMABLE_ERC20_DECIMALS)} ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`, buyConfig); // todo check this
+    console.log(`Info: Buying ${DESIRED_UNITS_OF_REDEEMABLE} ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`, buyConfig); // todo check this
     const buyStatusTransaction = await saleContract.buy(buyConfig);
     const buyStatusReceipt = await buyStatusTransaction.wait();
     console.log(`Info: Buy Receipt:`, buyStatusReceipt);
