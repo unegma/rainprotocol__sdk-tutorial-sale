@@ -56,14 +56,14 @@ export async function saleExample() {
     console.warn("Info: It is important to let your users know how many transactions to expect and what they are. " +
       "This example consists of 5 Transactions:\n\n" +
       "* ## For Admins:\n" +
-      "* Create Sale (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.002108 MATIC)\n" +
-      "* Start Sale (For Admins) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000061 MATIC) \n" +
+      "* 1. Create Sale (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.002108 MATIC)\n" +
+      "* 2. Start Sale (For Admins) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000061 MATIC) \n" +
       // todo what is this contract address? and is it approved to spend this again in future or only up to this amount?
       "* ## For Users:\n" +
-      "* Give Permission to 0x642d4e6d828436ee95658c3462b46dafc1d0a61a to access USDCC (For Users) (fee+gas at circa 2022-05-30T15:32:44Z: 0.00009 MATIC) \n" +
-      "* Buying from Sale (For Users) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000531 MATIC) \n" +
+      "* 3. a. Give Permission to 0x642d4e6d828436ee95658c3462b46dafc1d0a61a to access USDCC (For Users) (fee+gas at circa 2022-05-30T15:32:44Z: 0.00009 MATIC) \n" +
+      "* 3. b. Buying from Sale (For Users) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000531 MATIC) \n" +
       "* ## For Admins:\n" +
-      "* End Sale (For Admins) (fee+gas at circa 2022-05-30T15:32:44Z: 0.000158 MATIC) \n"
+      "* 4. End Sale (For Admins) (fee+gas at circa 2022-05-30T15:32:44Z: 0.000158 MATIC) \n"
     );
 
     // todo maybe warn users they will need to have X matic in their wallet in order to complete ALL the transactions
