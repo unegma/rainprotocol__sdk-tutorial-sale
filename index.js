@@ -21,12 +21,33 @@ export async function saleExample() {
     console.log('Info: (check your console for more data and make sure you have a browser wallet installed and connected to Polygon Mumbai testnet)', 'orange');
     const { signer, address } = await connect(CHAIN_DATA); // get the signer and account address using a very basic connection implementation
 
+    console.log('## Transactions', 'orange', 'bold');
+    console.log('Info: It is important to let your users know how many transactions to expect and what they are.', 'orange');
+    console.log('Info: This example consists of 5 Transactions:', 'orange');
+    console.log('### For Admins:', 'orange', 'bold');
+    console.log('1. Create Sale (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.002108 MATIC)', 'orange');
+    console.log('2. Start Sale (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000061 MATIC)', 'orange');
+      // todo what is this contract address? and is it approved to spend this again in future or only up to this amount?
+    console.log('### For Users:', 'orange', 'bold');
+    console.log('3. a. Give Permission to spend Token from Wallet (fee+gas at circa 2022-05-30T15:32:44Z: 0.00009 MATIC)', 'orange');
+    console.log('3. b. Buy from Sale with Tokens (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000531 MATIC)', 'orange');
+    console.log('### For Admins:', 'orange', 'bold');
+    console.log('4. End Sale (fee+gas at circa 2022-05-30T15:32:44Z: 0.000158 MATIC)', 'orange');
+    // todo maybe warn users they will need to have X matic in their wallet in order to complete ALL the transactions
+
+    console.log('------------------------------'); // separator
+
+    console.log('Info: BEFORE DOING THIS TUTORIAL, MAKE SURE YOU HAVE CREATED A RESERVE TOKEN FROM THE RESERVE TOKEN TUTORIAL AND ADDED THE ADDRESS TO: `RESERVE_TOKEN_ADDRESS`', 'red', 'bold');
+
+    console.log('------------------------------'); // separator
+
     // constants (can put these into .env)
+
     // v-- TODO PUT YOUR RESERVE TOKEN ADDRESS FROM PREVIOUS TUTORIAL HERE --v
-    const RESERVE_TOKEN_ADDRESS = "0xbeBFc04050e4afddE68EC2EA5f105690765c1a1E"; // a closed sale from which you own an rTKN
+    const RESERVE_TOKEN_ADDRESS = "0xbeBFc04050e4afddE68EC2EA5f105690765c1a1E"; // erc20 from previous tutorial
+    // const RESERVE_TOKEN_ADDRESS = '0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A'; // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals). if you want to use MATIC, it needs to be wrapped Matic
     // ^-- TODO PUT YOUR RESERVE TOKEN ADDRESS FROM PREVIOUS TUTORIAL HERE --^
 
-    // const RESERVE_TOKEN_ADDRESS = '0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A'; // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals). if you want to use MATIC, it needs to be wrapped Matic
     const RESERVE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
     const REDEEMABLE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
     const REDEEMABLE_WALLET_CAP = ethers.constants.MaxUint256; // no max otherwise can do: ethers.utils.parseUnits("100", ERC20_DECIMALS_REDEEMABLE)
@@ -69,59 +90,45 @@ export async function saleExample() {
       distributionEndForwardingAddress: "0x0000000000000000000000000000000000000000" // the rTKNs that are not sold get forwarded here (0x00.. will burn them)
     }
 
-    console.log('## Transactions', 'orange', 'bold');
-    console.log('Info: It is important to let your users know how many transactions to expect and what they are.', 'orange');
-    console.log('This example consists of X Transactions:', 'orange');
-    console.log('### For Admins:', 'orange');
-    console.log('1. Create Sale (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.002108 MATIC)', 'orange');
-    console.log('2. Start Sale (For Admins) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000061 MATIC)', 'orange');
-      // todo what is this contract address? and is it approved to spend this again in future or only up to this amount?
-    console.log('### For Users:', 'orange');
-    console.log('3. a. Give Permission to 0x642d4e6d828436ee95658c3462b46dafc1d0a61a to access USDCC (For Users) (fee+gas at circa 2022-05-30T15:32:44Z: 0.00009 MATIC)', 'orange');
-    console.log('3. b. Buying from Sale (For Users) (fee+gas cost at circa 2022-05-30T15:32:44Z: 0.000531 MATIC)', 'orange');
-    console.log('### For Admins:', 'orange');
-    console.log('4. End Sale (For Admins) (fee+gas at circa 2022-05-30T15:32:44Z: 0.000158 MATIC)', 'orange');
-
-    console.log('------------------------------'); // separator
-
-    console.log('Info: BEFORE DOING THIS TUTORIAL, MAKE SURE YOU HAVE CREATED A RESERVE TOKEN FROM THE RESERVE TOKEN TUTORIAL AND ADDED THE ADDRESS TO: `const RESERVE_TOKEN_ADDRESS`', 'red', 'bold');
-
-    console.log('------------------------------'); // separator
-
-    // todo maybe warn users they will need to have X matic in their wallet in order to complete ALL the transactions
-
-    console.log('## Section 1: (Admin Function) Create Sale');
-    console.log('Info: Creating Sale with the following state:', saleConfig, redeemableConfig);
+    console.log('## Section 1: (Admin Function) Create Sale', 'black', 'bold');
+    console.log('Info: Creating Sale with the following state:');
+    console.log('### Sale Config:', 'blue', 'bold');
+    console.log(saleConfig, 'blue');
+    console.log('### Redeemable (rTKN) Config:', 'blue', 'bold');
+    console.log(redeemableConfig, 'blue');
     const saleContract = await rainSDK.Sale.deploy(signer, saleConfig, redeemableConfig);
-    console.log('Result: Sale Contract:', saleContract); // the Sale contract and corresponding address
+    console.log(`Result: deployed Sale Contract with address: ${saleContract.address}`, 'green');
+    console.info(saleContract); // the Sale contract
     const redeemableContract = await saleContract.getRedeemable();
-    console.log('Result: Redeemable Contract:', redeemableContract); // the Sale contract and corresponding address
+    console.log(`Result: Redeemable Contract Address: ${redeemableContract.address}`, 'green');
+    console.info(redeemableContract); // the rTKN contract
 
     console.log('------------------------------'); // separator
 
     console.log('## Section 2: (Admin Function) Start Sale', 'black', 'bold');
-    console.log('(Note, a User can do this too, but it is more likely to be done by an Admin)');
+    console.log('Info: Note, a User can do this too (because of the open nature of blockchains), but it is more likely to be done by an Admin. Starting the Sale will be dependent on the canStartStateConfig', 'orange');
     console.log('Info: Starting The Sale.');
     const startStatusTransaction = await saleContract.start();
     const startStatusReceipt = await startStatusTransaction.wait();
-    console.log('Info: Sale Started Receipt:', startStatusReceipt);
+    console.log('Result: Sale Started.', 'green');
+    console.info(startStatusReceipt);
 
     console.log('------------------------------'); // separator
 
     console.log('## Section 3: (User Function) Approve Spend and Buy', 'black', 'bold');
     // connect to the reserve token and approve the spend limit for the buy, to be able to perform the "buy" transaction.
     console.log(`Info: Connecting to Reserve token for approval of spend:`);
-    console.log(RESERVE_TOKEN_ADDRESS, 'green');
-    const reserveContract = new rainSDK.ERC20(RESERVE_TOKEN_ADDRESS, signer)
+    console.log(RESERVE_TOKEN_ADDRESS, 'blue');
+    const reserveContract = new rainSDK.EmissionsERC20(RESERVE_TOKEN_ADDRESS, signer) // use rainSDK.ERC20 if using USDC
+    // const reserveContract = new rainSDK.ERC20(RESERVE_TOKEN_ADDRESS, signer) // use rainSDK.ERC20 if using USDC
+    console.info(reserveContract);
     const approveTransaction = await reserveContract.approve(
       saleContract.address,
       ethers.utils.parseUnits(DESIRED_UNITS_OF_REDEEMABLE.toString(), REDEEMABLE_ERC20_DECIMALS)
     );
     const approveReceipt = await approveTransaction.wait();
-    console.log('Info: ReserveContract:');
-    console.log(reserveContract);
-    console.log('Info: Approve Receipt:');
-    console.log(approveReceipt);
+    console.info(approveReceipt);
+    console.log('Result: Approved.', 'green');
 
     const buyConfig = {
       feeRecipient: address,
@@ -136,20 +143,21 @@ export async function saleExample() {
     ); // THIS WILL CALCULATE THE PRICE FOR **YOU** AND WILL TAKE INTO CONSIDERATION THE WALLETCAP, if the user's wallet cap is passed, the price will be so high that the user can't buy the token (you will see a really long number as the price)
     console.log(`Info: Price of tokens in the Sale: ${parseInt(priceOfRedeemableInUnitsOfReserve.toString())/(10**RESERVE_ERC20_DECIMALS)} ${await reserveContract.symbol()} (${reserveContract.address})`); // 10 to the power of REDEEMABLE_ERC20_DECIMALS
     console.log(`Info: Buying ${DESIRED_UNITS_OF_REDEEMABLE} ${redeemableConfig.erc20Config.symbol} from Sale with parameters:`);
-    console.log(buyConfig); // todo check this
+    console.log(buyConfig, 'blue');
     const buyStatusTransaction = await saleContract.buy(buyConfig);
     const buyStatusReceipt = await buyStatusTransaction.wait();
-    console.log('Info: Buy Receipt:')
-    console.log(buyStatusReceipt);
+    console.info(buyStatusReceipt);
+    console.log(`Result: Buy Successful (add the token address: ${redeemableContract.address} to your wallet to view)`, 'green');
 
     console.log('------------------------------'); // separator
 
     console.log('## Section 4: (Admin Function) End Sale', 'black', 'bold');
-    console.log('(Note, a User can do this too after the specified canEndStateConfig, but it is more likely to be done by an Admin)', 'orange');
+    console.log('Info: Note, a User can do this too (because of the open nature of blockchains), but it is more likely to be done by an Admin. Ending the Sale will be dependent on the canEndStateConfig', 'orange');
     console.log('Info: Ending The Sale.');
     const endStatusTransaction = await saleContract.end();
     const endStatusReceipt = await endStatusTransaction.wait();
-    console.log('Info: Sale Ended Receipt:', endStatusReceipt);
+    console.log('Result: Sale Ended.', 'green');
+    console.info(endStatusReceipt);
 
     console.log('------------------------------'); // separator
 
