@@ -16,12 +16,11 @@ export const connect = async (chainData) => {
     const signer = provider.getSigner();
     const address = await signer.getAddress();
 
-    console.log(`Result: Connected to your account with address: ${address}`, 'green');
+    console.log(`> Result: Connected to your account with address: ${address}`, 'green');
     console.log('------------------------------'); // separator
     return { signer, address };
   } catch (err) {
-    console.log('Error: You may not have a Web3 Wallet installed', 'red', 'bold');
-    console.log(err, 'red');
+    console.warn(err);
     throw new Error('Web3WalletConnectError');
   }
 }
