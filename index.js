@@ -44,7 +44,7 @@ export async function saleExample() {
     // constants (can put these into .env)
 
     // v-- TODO PUT YOUR RESERVE TOKEN ADDRESS FROM PREVIOUS TUTORIAL HERE --v
-    const RESERVE_TOKEN_ADDRESS = "0xbeBFc04050e4afddE68EC2EA5f105690765c1a1E"; // erc20 from previous tutorial
+    const RESERVE_TOKEN_ADDRESS = "0x0BB108c8fD254D442bDb578569dba61a6eE44C5a"; // erc20 from previous tutorial
     // const RESERVE_TOKEN_ADDRESS = '0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A'; // USDCC MUMBAI 0x25a4Dd4cd97ED462EB5228de47822e636ec3E31A (18 decimals). if you want to use MATIC, it needs to be wrapped Matic
     // ^-- TODO PUT YOUR RESERVE TOKEN ADDRESS FROM PREVIOUS TUTORIAL HERE --^
 
