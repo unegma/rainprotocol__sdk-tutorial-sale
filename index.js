@@ -91,7 +91,7 @@ export async function saleExample() {
     }
 
     console.log('> ## Section 1: (Admin Function) Create Sale', 'black', 'bold');
-    console.log('> Info: Creating Sale with the following state:');
+    console.log('> Info: Creating Sale with the following parameters:');
     console.log('> ### Sale Config:', 'blue', 'bold');
     console.log(saleConfig, 'blue');
     console.log('> ### Redeemable (rTKN) Config:', 'blue', 'bold');
