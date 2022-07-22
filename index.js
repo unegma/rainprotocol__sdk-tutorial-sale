@@ -50,7 +50,7 @@ export async function saleExample() {
 
     const RESERVE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
     const REDEEMABLE_ERC20_DECIMALS = 18; // See here for more info: https://docs.openzeppelin.com/contracts/3.x/erc20#a-note-on-decimals
-    const REDEEMABLE_WALLET_CAP = ethers.constants.MaxUint256; // no max otherwise can do: ethers.utils.parseUnits("100", ERC20_DECIMALS_REDEEMABLE)
+    const REDEEMABLE_WALLET_CAP = 1 // for no max: ethers.constants.MaxUint256;
     const REDEEMABLE_INITIAL_SUPPLY = 100; // initial supply of redeemable tokens, needs to be formatted using ethers.utils.parseUnits
     const STATIC_RESERVE_PRICE_OF_REDEEMABLE = 1; // price 1000000000000000000 // 10^18 (reserve token erc decimals) // static price of the REDEEMABLE denoted in RESERVE // needs to be formatted using ethers.utils.parseUnits
     const SALE_TIMEOUT_IN_BLOCKS = 600; // for MUMBAI 100 blocks (10 mins) // this will be changing to seconds in upcoming releases // this is to stop funds getting trapped (in case sale isn't ended by someone) (security measure for sale to end at some point)
@@ -63,7 +63,7 @@ export async function saleExample() {
       canEndStateConfig: opcodeData.canEndStateConfig, // config for the end of the Sale (see opcodes section below)
       calculatePriceStateConfig: opcodeData.calculatePriceStateConfig(
         ethers.utils.parseUnits(STATIC_RESERVE_PRICE_OF_REDEEMABLE.toString(), RESERVE_ERC20_DECIMALS),
-        REDEEMABLE_WALLET_CAP // this is already formatted with ethers.utils.parseUnits
+        ethers.utils.parseUnits(REDEEMABLE_WALLET_CAP.toString(), REDEEMABLE_ERC20_DECIMALS), // this is already formatted with ethers.utils.parseUnits
       ), // config for the `calculatePrice` function (see opcodes section below)
       recipient: address, // who will receive the RESERVE token (e.g. USDCC) after the Sale completes
       reserve: RESERVE_TOKEN_ADDRESS, // the reserve token contract address (MUMBAI MATIC in this case)
