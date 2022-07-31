@@ -1,6 +1,5 @@
-# Rain SDK Tutorial
+# Rain Sale Example
 
-Code examples to go along with the [sdk example here][sdk-example]
-
-
-[sdk-example]: https://docs.rainprotocol.xyz
+* Stripped back example to go along with [Rain Sale Frontend](https://rain-sale.unegma.work)
+* Stripped back example to go along with [Rain Sale Frontend Github](https://github.com/unegma/rain-sale)
+* Rain Protocol Docs Link: [docs](https://docs.rainprotocol.xyz)
